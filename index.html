@@ -14,95 +14,42 @@
       --ok:#3ddc97;
       --warn:#ffcc66;
       --err:#ff6b6b;
-      --accent:#62a4ff;
       --chip:#233557;
       --border:#25365a;
     }
     * { box-sizing: border-box; }
-    body {
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: linear-gradient(180deg,#0b1220,#0a101c);
-      color:var(--text);
-    }
+    body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: linear-gradient(180deg,#0b1220,#0a101c); color:var(--text); }
     .layout { display:grid; grid-template-columns: 280px 1fr; min-height:100vh; }
-    .sidebar {
-      border-right:1px solid var(--border);
-      background:#0e1728;
-      padding:18px;
-    }
+    .sidebar { border-right:1px solid var(--border); background:#0e1728; padding:18px; }
     .brand { font-weight:700; font-size:20px; margin-bottom:8px; }
     .subtitle { color:var(--muted); font-size:13px; margin-bottom:18px; }
-    .nav a {
-      display:block;
-      color:var(--text);
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:10px;
-      margin-bottom:6px;
-      background:transparent;
-      border:1px solid transparent;
+    .nav a, .agent-link {
+      display:block; color:var(--text); text-decoration:none; padding:10px 12px;
+      border-radius:10px; margin-bottom:6px; border:1px solid transparent;
     }
-    .nav a.active { background:var(--panel); border-color:var(--border); }
-    .nav a:hover { background:#121c30; }
-
+    .nav a.active, .agent-link.active { background:var(--panel); border-color:var(--border); }
+    .nav a:hover, .agent-link:hover { background:#121c30; }
     .content { padding:18px; }
-    .topbar {
-      display:flex; justify-content:space-between; align-items:center;
-      margin-bottom:16px;
-    }
-    .kpis {
-      display:grid;
-      grid-template-columns: repeat(4,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:14px;
-    }
-    .card {
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-    }
-    .kpi-title { color:var(--muted); font-size:12px; }
-    .kpi-value { font-size:26px; font-weight:700; margin-top:6px; }
-
-    .main-grid {
-      display:grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap:12px;
-      margin-bottom: 12px;
-    }
-
-    .sub-grid {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px; }
+    .grid { display:grid; gap:12px; }
+    .grid.overview { grid-template-columns: 1.2fr 1fr; }
+    .grid.agent { grid-template-columns: 1fr 1fr; }
 
     table { width:100%; border-collapse:collapse; font-size:14px; }
     th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #203150; }
     th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-
-    .chip {
-      display:inline-flex; align-items:center; gap:6px;
-      font-size:12px; padding:4px 8px; border-radius:999px;
-      background:var(--chip); border:1px solid #314a78;
-    }
+    .chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; background:var(--chip); border:1px solid #314a78; }
     .dot { width:8px; height:8px; border-radius:999px; display:inline-block; }
     .ok { background:var(--ok); }
     .warn { background:var(--warn); }
     .err { background:var(--err); }
+    .meta { color:var(--muted); font-size:12px; }
 
     .log {
-      background:var(--panel-2);
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-      height:300px;
-      overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size:12px;
-      line-height:1.5;
+      background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px;
+      height:300px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:12px; line-height:1.5;
     }
     .log-line { margin-bottom:8px; color:#c7d7ff; }
     .log-line .time { color:#7ea0d6; }
@@ -116,71 +63,22 @@
     button { cursor:pointer; }
     button:hover { background:#284270; }
 
-    .footer-note { color:var(--muted); font-size:12px; margin-top:10px; }
-
-    .assign-grid {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:8px;
-      margin-top: 8px;
-    }
-
     .queue-list {
-      margin-top:10px;
-      max-height:220px;
-      overflow:auto;
-      border:1px solid var(--border);
-      border-radius:10px;
-      background:var(--panel-2);
-      padding:8px;
-      font-size:13px;
+      margin-top:10px; max-height:260px; overflow:auto; border:1px solid var(--border);
+      border-radius:10px; background:var(--panel-2); padding:8px; font-size:13px;
     }
-
-    .queue-item {
-      padding:8px;
-      border-bottom:1px solid #22365d;
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-    }
+    .queue-item { padding:8px; border-bottom:1px solid #22365d; display:flex; justify-content:space-between; gap:8px; }
     .queue-item:last-child { border-bottom:none; }
 
-    .checklist-wrap {
-      display:grid;
-      grid-template-columns: repeat(2,minmax(0,1fr));
-      gap:10px;
-    }
-
-    .agent-checklist {
-      background:var(--panel-2);
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-    }
-
-    .agent-checklist h4 {
-      margin:0 0 8px;
-      font-size:14px;
-      color:#cfe0ff;
-    }
-
-    .agent-checklist label {
-      display:block;
-      margin:6px 0;
-      font-size:13px;
-      color:#d8e4ff;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .checklist { background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; }
+    .checklist label { display:block; margin:6px 0; font-size:13px; color:#d8e4ff; }
+    .agent-list { margin-top:14px; border-top:1px solid var(--border); padding-top:10px; }
+    .footer-note { color:var(--muted); font-size:12px; margin-top:12px; }
 
     @media (max-width: 1200px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { border-right:none; border-bottom:1px solid var(--border); }
-      .kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .main-grid, .sub-grid, .assign-grid, .checklist-wrap { grid-template-columns: 1fr; }
+      .grid.overview, .grid.agent { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -188,107 +86,26 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">🎛️ Agent Orchestra</div>
-      <div class="subtitle">High-level command view for many agents</div>
+      <div class="subtitle">Per-agent operational control center</div>
       <nav class="nav">
-        <a class="active" href="#">Overview</a>
-        <a href="#">Agents</a>
-        <a href="#">Task Delegation</a>
-        <a href="#">Runs</a>
-        <a href="#">Errors</a>
-        <a href="#">Settings</a>
+        <a id="nav-overview" href="#/overview" class="active">Overview</a>
       </nav>
-      <div class="footer-note" style="margin-top:18px;">
-        Mock UI v0.2 • includes delegation workflow + per-agent checklists.
-      </div>
+
+      <div class="agent-list" id="agent-links"></div>
+      <div class="footer-note">Mock UI v0.3 • per-agent pages with delegated task flow + checklists.</div>
     </aside>
 
-    <main class="content">
-      <div class="topbar">
-        <h2 style="margin:0;">Overview</h2>
-        <div class="chip"><span class="dot ok"></span> Auto-refresh: 2s</div>
-      </div>
-
-      <section class="kpis">
-        <div class="card"><div class="kpi-title">Active Agents</div><div class="kpi-value" id="kpi-active">9</div></div>
-        <div class="card"><div class="kpi-title">Queued Tasks</div><div class="kpi-value" id="kpi-queue">17</div></div>
-        <div class="card"><div class="kpi-title">Failures (24h)</div><div class="kpi-value" id="kpi-fail">3</div></div>
-        <div class="card"><div class="kpi-title">Avg Cycle Time</div><div class="kpi-value" id="kpi-cycle">42s</div></div>
-      </section>
-
-      <section class="main-grid">
-        <div class="card">
-          <h3 style="margin-top:0;">Agent Fleet Status</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Status</th>
-                <th>Current Task</th>
-                <th>CPU</th>
-                <th>Last Seen</th>
-              </tr>
-            </thead>
-            <tbody id="agents-body"></tbody>
-          </table>
-        </div>
-
-        <div>
-          <div class="card" style="margin-bottom:12px;">
-            <h3 style="margin-top:0;">Live Event Stream</h3>
-            <div class="log" id="log"></div>
-            <div class="controls">
-              <button onclick="injectTask()">Simulate Task</button>
-              <button onclick="injectFailure()">Simulate Failure</button>
-              <button onclick="clearLog()">Clear</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="sub-grid">
-        <div class="card">
-          <h3 style="margin:0;">Task Delegation Flow (visualization)</h3>
-          <div class="meta" style="margin-top:6px;">Create task → route to agent → queue state updates</div>
-
-          <div class="assign-grid">
-            <input id="task-title" placeholder="Task title (e.g. Add OAuth retries)" />
-            <select id="task-priority">
-              <option value="normal">Priority: Normal</option>
-              <option value="high">Priority: High</option>
-              <option value="urgent">Priority: Urgent</option>
-            </select>
-            <select id="task-agent">
-              <option value="auto">Auto-route</option>
-              <option value="planner-1">planner-1</option>
-              <option value="coder-2">coder-2</option>
-              <option value="tester-3">tester-3</option>
-              <option value="docs-1">docs-1</option>
-              <option value="ops-1">ops-1</option>
-              <option value="research-1">research-1</option>
-            </select>
-            <button onclick="delegateTask()">Delegate Task</button>
-          </div>
-
-          <div class="queue-list" id="queue-list"></div>
-        </div>
-
-        <div class="card">
-          <h3 style="margin:0;">Per-Agent Checklists</h3>
-          <div class="meta" style="margin-top:6px; margin-bottom:10px;">Each agent’s readiness/status checklist at a glance</div>
-          <div class="checklist-wrap" id="checklist-wrap"></div>
-        </div>
-      </section>
-    </main>
+    <main class="content" id="app"></main>
   </div>
 
   <script>
     const agents = [
-      { name:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now', checklist:['Intake parsed','Dependencies mapped','Output schema set'] },
-      { name:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now', checklist:['Tests identified','Branch clean','Patch queued'] },
-      { name:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago', checklist:['Fixtures loaded','Smoke tests pass','Flaky retry configured'] },
-      { name:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago', checklist:['Template selected','Style guide loaded','Publish target set'] },
-      { name:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now', checklist:['Health checks mapped','Rollback plan ready','Alert thresholds set'] },
-      { name:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now', checklist:['Sources selected','Confidence score','Notes formatted'] }
+      { id:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now', start:'09:32', retries:0, checklist:['Intake parsed','Dependencies mapped','Output schema set'] },
+      { id:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now', start:'09:41', retries:1, checklist:['Tests identified','Branch clean','Patch queued'] },
+      { id:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago', start:'09:45', retries:2, checklist:['Fixtures loaded','Smoke tests pass','Flaky retry configured'] },
+      { id:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago', start:'--', retries:0, checklist:['Template selected','Style guide loaded','Publish target set'] },
+      { id:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now', start:'09:20', retries:3, checklist:['Health checks mapped','Rollback plan ready','Alert thresholds set'] },
+      { id:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now', start:'09:39', retries:0, checklist:['Sources selected','Confidence score','Notes formatted'] }
     ];
 
     const queue = [
@@ -297,10 +114,7 @@
       { title:'Investigate memory spike', priority:'urgent', owner:'ops-1', state:'running' }
     ];
 
-    const body = document.getElementById('agents-body');
-    const log = document.getElementById('log');
-    const queueList = document.getElementById('queue-list');
-    const checklistWrap = document.getElementById('checklist-wrap');
+    const globalLog = [];
 
     function statusChip(status) {
       if (status === 'running') return `<span class="chip"><span class="dot ok"></span>running</span>`;
@@ -309,111 +123,200 @@
       return `<span class="chip"><span class="dot" style="background:#9ab0d6"></span>idle</span>`;
     }
 
-    function renderTable() {
-      body.innerHTML = agents.map(a => `
-        <tr>
-          <td>${a.name}</td>
-          <td>${statusChip(a.status)}</td>
-          <td>${a.task}</td>
-          <td>${a.cpu}%</td>
-          <td>${a.seen}</td>
-        </tr>
-      `).join('');
-    }
-
-    function renderQueue() {
-      queueList.innerHTML = queue.map((q, i) => `
-        <div class="queue-item">
-          <div>
-            <div><strong>${q.title}</strong></div>
-            <div class="meta">owner: ${q.owner} • ${q.state}</div>
-          </div>
-          <div class="chip">${q.priority}</div>
-        </div>
-      `).join('');
-      document.getElementById('kpi-queue').textContent = queue.length;
-    }
-
-    function renderChecklists() {
-      checklistWrap.innerHTML = agents.map((a, i) => `
-        <div class="agent-checklist">
-          <h4>${a.name}</h4>
-          ${a.checklist.map((item, j) => {
-            const checked = (i + j) % 2 === 0 ? 'checked' : '';
-            return `<label><input type="checkbox" ${checked}/> ${item}</label>`;
-          }).join('')}
-        </div>
-      `).join('');
-    }
-
-    function addLog(message) {
+    function addLog(message, agentId = null) {
       const t = new Date().toLocaleTimeString();
-      const div = document.createElement('div');
-      div.className = 'log-line';
-      div.innerHTML = `<span class="time">[${t}]</span> ${message}`;
-      log.prepend(div);
-      while (log.children.length > 80) log.removeChild(log.lastChild);
+      globalLog.unshift({ t, message, agentId });
+      if (globalLog.length > 200) globalLog.pop();
     }
 
     function autoRouteAgent() {
-      const preferred = agents.filter(a => a.status !== 'error').sort((a, b) => a.cpu - b.cpu);
-      return preferred[0]?.name || 'planner-1';
+      const preferred = agents.filter(a => a.status !== 'error').sort((a,b) => a.cpu - b.cpu);
+      return preferred[0]?.id || 'planner-1';
     }
 
-    function delegateTask() {
-      const title = document.getElementById('task-title').value.trim();
-      const priority = document.getElementById('task-priority').value;
-      const selected = document.getElementById('task-agent').value;
-      if (!title) {
-        addLog('⚠️ delegation blocked: missing task title');
-        return;
-      }
-      const owner = selected === 'auto' ? autoRouteAgent() : selected;
-      queue.unshift({ title, priority, owner, state: 'queued' });
-      addLog(`🛰️ delegated "${title}" → ${owner} (${priority})`);
-
-      const target = agents.find(a => a.name === owner);
+    function delegateTask({ title, priority, owner }) {
+      const chosen = owner === 'auto' ? autoRouteAgent() : owner;
+      queue.unshift({ title, priority, owner: chosen, state: 'queued' });
+      const target = agents.find(a => a.id === chosen);
       if (target && target.status !== 'error') {
         target.status = 'running';
         target.task = title;
+        target.start = new Date().toLocaleTimeString();
       }
-
-      document.getElementById('task-title').value = '';
-      renderQueue();
-      renderTable();
+      addLog(`🛰️ delegated "${title}" → ${chosen} (${priority})`, chosen);
     }
 
+    function renderAgentLinks(activeId = null) {
+      const root = document.getElementById('agent-links');
+      root.innerHTML = '<div class="meta" style="margin-bottom:8px;">Agents</div>' + agents.map(a => `
+        <a class="agent-link ${activeId === a.id ? 'active' : ''}" href="#/agent/${a.id}">
+          ${a.id} <span class="meta">• ${a.status}</span>
+        </a>
+      `).join('');
+      document.getElementById('nav-overview').classList.toggle('active', !activeId);
+    }
+
+    function renderOverview() {
+      renderAgentLinks();
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="topbar">
+          <h2 style="margin:0;">Overview</h2>
+          <div class="chip"><span class="dot ok"></span> Auto-refresh: 2s</div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <h3 style="margin:0;">Why per-agent pages?</h3>
+          <div class="meta" style="margin-top:6px;">This view is intentionally minimal. Click any agent in the sidebar for task queue, checklist, controls, and local event stream.</div>
+        </div>
+
+        <div class="grid overview">
+          <div class="card">
+            <h3 style="margin-top:0;">Fleet Snapshot</h3>
+            <table>
+              <thead><tr><th>Agent</th><th>Status</th><th>Current Task</th><th>CPU</th><th>Page</th></tr></thead>
+              <tbody>
+                ${agents.map(a => `
+                  <tr>
+                    <td>${a.id}</td>
+                    <td>${statusChip(a.status)}</td>
+                    <td>${a.task}</td>
+                    <td>${a.cpu}%</td>
+                    <td><a style="color:#9fd0ff" href="#/agent/${a.id}">Open</a></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0;">Global Event Stream</h3>
+            <div class="log" id="global-log"></div>
+          </div>
+        </div>
+      `;
+
+      const logEl = document.getElementById('global-log');
+      logEl.innerHTML = globalLog.map(l => `<div class="log-line"><span class="time">[${l.t}]</span> ${l.message}</div>`).join('');
+    }
+
+    function renderAgentPage(agentId) {
+      const agent = agents.find(a => a.id === agentId);
+      if (!agent) { location.hash = '#/overview'; return; }
+      renderAgentLinks(agentId);
+
+      const agentQueue = queue.filter(q => q.owner === agent.id);
+      const localLog = globalLog.filter(l => !l.agentId || l.agentId === agent.id);
+
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="topbar">
+          <h2 style="margin:0;">Agent: ${agent.id}</h2>
+          <div>${statusChip(agent.status)}</div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <h3 style="margin:0;">Current State</h3>
+          <div class="grid agent" style="margin-top:10px;">
+            <div><div class="meta">Current task</div><div><strong>${agent.task}</strong></div></div>
+            <div><div class="meta">CPU / last seen</div><div><strong>${agent.cpu}%</strong> • ${agent.seen}</div></div>
+            <div><div class="meta">Started at</div><div>${agent.start}</div></div>
+            <div><div class="meta">Retries</div><div>${agent.retries}</div></div>
+          </div>
+          <div class="controls" style="margin-top:12px;">
+            <button onclick="agentAction('${agent.id}','pause')">Pause</button>
+            <button onclick="agentAction('${agent.id}','resume')">Resume</button>
+            <button onclick="agentAction('${agent.id}','retry')">Retry last step</button>
+            <button onclick="agentAction('${agent.id}','escalate')">Escalate</button>
+          </div>
+        </div>
+
+        <div class="grid agent">
+          <div class="card">
+            <h3 style="margin-top:0;">Delegate New Task</h3>
+            <div class="controls" style="margin-top:0;">
+              <input id="task-title" placeholder="Task for ${agent.id}" style="min-width:260px" />
+              <select id="task-priority">
+                <option value="normal">normal</option>
+                <option value="high">high</option>
+                <option value="urgent">urgent</option>
+              </select>
+              <button onclick="delegateToAgent('${agent.id}')">Assign</button>
+            </div>
+
+            <div class="queue-list" id="queue-list">
+              ${agentQueue.length ? agentQueue.map(q => `
+                <div class="queue-item"><div><strong>${q.title}</strong><div class="meta">${q.state}</div></div><div class="chip">${q.priority}</div></div>
+              `).join('') : '<div class="meta">No queued items for this agent.</div>'}
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0;">Checklist</h3>
+            <div class="checklist">
+              ${agent.checklist.map((item, i) => `
+                <label><input type="checkbox" ${i % 2 === 0 ? 'checked' : ''}/> ${item}</label>
+              `).join('')}
+            </div>
+            <div class="meta" style="margin-top:8px;">Per-agent runbook style checklist for operational clarity.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3 style="margin-top:0;">Local Event Stream</h3>
+          <div class="log" id="local-log">${localLog.map(l => `<div class="log-line"><span class="time">[${l.t}]</span> ${l.message}</div>`).join('')}</div>
+        </div>
+      `;
+    }
+
+    function agentAction(agentId, action) {
+      const agent = agents.find(a => a.id === agentId);
+      if (!agent) return;
+      if (action === 'pause') agent.status = 'idle';
+      if (action === 'resume') agent.status = 'running';
+      if (action === 'retry') agent.retries += 1;
+      addLog(`⚙️ ${agentId}: ${action} action triggered`, agentId);
+      route();
+    }
+
+    function delegateToAgent(agentId) {
+      const title = document.getElementById('task-title')?.value?.trim();
+      const priority = document.getElementById('task-priority')?.value || 'normal';
+      if (!title) {
+        addLog(`⚠️ ${agentId}: delegation blocked (missing title)`, agentId);
+        route();
+        return;
+      }
+      delegateTask({ title, priority, owner: agentId });
+      route();
+    }
+
+    function route() {
+      const hash = location.hash || '#/overview';
+      const agentMatch = hash.match(/^#\/agent\/(.+)$/);
+      if (agentMatch) renderAgentPage(agentMatch[1]);
+      else renderOverview();
+    }
+
+    // background simulation
     function randomTick() {
       agents.forEach(a => {
-        a.cpu = Math.max(3, Math.min(95, a.cpu + Math.floor((Math.random() - 0.5) * 12)));
+        a.cpu = Math.max(3, Math.min(95, a.cpu + Math.floor((Math.random() - 0.5) * 10)));
       });
-      const active = agents.filter(a => a.status === 'running').length;
-      document.getElementById('kpi-active').textContent = active;
-      renderTable();
+      if (Math.random() < 0.3) {
+        const a = agents[Math.floor(Math.random()*agents.length)];
+        addLog(`${a.id} heartbeat ok • cpu ${a.cpu}%`, a.id);
+      }
+      route();
     }
 
-    function injectTask() {
-      const names = ['planner-1','coder-2','tester-3','research-1'];
-      const who = names[Math.floor(Math.random()*names.length)];
-      addLog(`${who} accepted task • queue latency: ${Math.floor(Math.random()*5)+1}s`);
-    }
-
-    function injectFailure() {
-      const idx = Math.floor(Math.random() * agents.length);
-      agents[idx].status = 'error';
-      agents[idx].task = 'Needs intervention';
-      document.getElementById('kpi-fail').textContent = Number(document.getElementById('kpi-fail').textContent) + 1;
-      addLog(`❗ ${agents[idx].name} failed test shard #${Math.floor(Math.random()*20)+1} (timeout)`);
-      renderTable();
-    }
-
-    function clearLog() { log.innerHTML = ''; }
-
-    renderTable();
-    renderQueue();
-    renderChecklists();
+    // seed logs
     addLog('Dashboard initialized');
     addLog('Connected to orchestration bus (mock)');
+    addLog('Tip: open an agent page from left sidebar for full detail');
+
+    window.addEventListener('hashchange', route);
+    route();
     setInterval(randomTick, 2000);
   </script>
 </body>

@@ -96,16 +96,28 @@
       gap:5px;
       color:#97acd6;
       font-size:12px;
+      white-space: nowrap;
+      vertical-align: middle;
+      margin-left: 4px;
     }
 
     .session-inline input {
       width:80px;
-      padding:3px 6px;
+      height:24px;
+      padding:2px 6px;
       border-radius:6px;
       border:1px solid #355488;
       background:#13223b;
       color:#dbe7ff;
       font-size:12px;
+      line-height: 20px;
+      vertical-align: middle;
+    }
+
+    .pane-suffix {
+      display:inline-flex;
+      align-items:center;
+      line-height:1;
     }
 
     .agent-head-right {
@@ -433,10 +445,7 @@
           <div class="agent-head">
             <div>
               <strong>${a.id}</strong>
-              <span class="session-inline">(
-                <input value="${a.session}" onchange="renameSession('${a.id}', this.value)" title="Rename tmux session" />
-                : ${a.pane})
-              </span>
+              <span class="session-inline">(<input value="${a.session}" onchange="renameSession('${a.id}', this.value)" title="Rename tmux session" /><span class="pane-suffix">: ${a.pane})</span></span>
             </div>
             <div class="agent-head-right">
               <span class="drag-handle" title="Drag to rearrange">⋮⋮ drag</span>

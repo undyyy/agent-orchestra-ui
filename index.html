@@ -63,6 +63,11 @@
       background:var(--panel);
     }
 
+    .agent-card.dragging {
+      opacity: 0.55;
+      border-color: #4c78bd;
+    }
+
     .agent-head {
       display:flex;
       justify-content:space-between;
@@ -82,6 +87,35 @@
       border-radius:999px;
       padding:4px 8px;
       color:#c7ddff;
+    }
+
+    .agent-head-right {
+      display:flex;
+      gap:6px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .mini-btn {
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:7px;
+      border:1px solid #355488;
+      background:#162844;
+      color:#d9e8ff;
+      cursor:pointer;
+    }
+
+    .mini-btn:hover { background:#21365b; }
+
+    .drag-handle {
+      font-size:12px;
+      color:#9db6de;
+      border:1px dashed #3b5887;
+      padding:4px 7px;
+      border-radius:8px;
+      cursor:grab;
+      user-select:none;
     }
 
     .split {
@@ -309,10 +343,15 @@
 
     function render() {
       grid.innerHTML = agents.map(a => `
-        <div class="agent-card" id="card-${a.id}">
+        <div class="agent-card" id="card-${a.id}" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')" ondragend="dragEnd(event)">
           <div class="agent-head">
             <div><strong>${a.id}</strong> <span style="color:#97acd6">(${a.session}:${a.pane})</span></div>
-            <span class="chip">live</span>
+            <div class="agent-head-right">
+              <span class="drag-handle" title="Drag to rearrange">⋮⋮ drag</span>
+              <button class="mini-btn" onclick="moveAgent('${a.id}', -1)">↑</button>
+              <button class="mini-btn" onclick="moveAgent('${a.id}', 1)">↓</button>
+              <span class="chip">live</span>
+            </div>
           </div>
 
           <div class="split">
@@ -396,6 +435,49 @@
       f.state = states[Math.floor(Math.random() * states.length)];
       append(a.id, `git status update: ${f.name} -> ${label(f.state)}`);
       render();
+    }
+
+    function moveAgent(agentId, delta) {
+      const idx = agents.findIndex(a => a.id === agentId);
+      if (idx === -1) return;
+      const next = idx + delta;
+      if (next < 0 || next >= agents.length) return;
+      const [item] = agents.splice(idx, 1);
+      agents.splice(next, 0, item);
+      render();
+      append(agentId, `<ok> pane moved ${delta < 0 ? 'up' : 'down'}`);
+    }
+
+    let draggingId = null;
+
+    function dragStart(event, agentId) {
+      draggingId = agentId;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', agentId);
+      event.currentTarget.classList.add('dragging');
+    }
+
+    function dragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    }
+
+    function dropCard(event, targetId) {
+      event.preventDefault();
+      const sourceId = event.dataTransfer.getData('text/plain') || draggingId;
+      if (!sourceId || sourceId === targetId) return;
+      const from = agents.findIndex(a => a.id === sourceId);
+      const to = agents.findIndex(a => a.id === targetId);
+      if (from === -1 || to === -1) return;
+      const [item] = agents.splice(from, 1);
+      agents.splice(to, 0, item);
+      render();
+      append(sourceId, `<ok> pane reordered before ${targetId}`);
+    }
+
+    function dragEnd(event) {
+      draggingId = null;
+      document.querySelectorAll('.agent-card.dragging').forEach(el => el.classList.remove('dragging'));
     }
 
     // fake live activity

@@ -6,6 +6,7 @@ This version keeps the simple tmux-wall idea but adds a second panel per agent:
 
 - **Left:** remote tmux pane view + command input
 - **Right:** file tree with change icons (`clean`, `added`, `modified`, `deleted`)
+- **Rearrange panes:** drag-and-drop agent cards (or use ↑/↓ buttons)
 
 Why this works:
 - terminal gives execution transparency

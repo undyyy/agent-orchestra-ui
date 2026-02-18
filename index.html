@@ -83,6 +83,13 @@
       background:var(--panel);
       position: relative;
       animation: cardSlideIn .45s cubic-bezier(.22,.68,.36,1) both;
+      resize: vertical;
+      height: 360px;
+    }
+
+    .agent-card.collapsed {
+      resize: none;
+      height: auto !important;
     }
 
     /* Gradient top border accent */
@@ -105,8 +112,16 @@
     .agent-card:nth-child(6) { --card-gradient: linear-gradient(90deg, #8b5cf6, #d946ef, #f0abfc); animation-delay: .35s; }
 
     .agent-card.dragging {
-      opacity: 0.55;
+      opacity: 0.4;
       border-color: #4c78bd;
+    }
+
+    .agent-card.drop-above {
+      box-shadow: 0 -2px 0 0 #6366f1;
+    }
+
+    .agent-card.drop-below {
+      box-shadow: 0 2px 0 0 #6366f1;
     }
 
     .agent-card.collapsed .split {
@@ -250,7 +265,8 @@
     .split {
       display:grid;
       grid-template-columns: 1.2fr 0.8fr;
-      min-height: 320px;
+      height: calc(100% - 42px); /* fill card minus header */
+      min-height: 0;
     }
 
     .pane-side, .tree-side {
@@ -744,6 +760,8 @@
     // Track collapsed folders per agent: { agentId: Set of folder indices }
     const collapsedFolders = Object.fromEntries(agents.map(a => [a.id, new Set()]));
     const collapsedCards = new Set();
+    const DEFAULT_CARD_HEIGHT = 360;
+    const COLLAPSE_THRESHOLD = 80;
 
     function toggleCard(agentId) {
       const card = document.getElementById(`card-${agentId}`);
@@ -751,11 +769,25 @@
       if (collapsedCards.has(agentId)) {
         collapsedCards.delete(agentId);
         card.classList.remove('collapsed');
+        card.style.height = DEFAULT_CARD_HEIGHT + 'px';
       } else {
         collapsedCards.add(agentId);
         card.classList.add('collapsed');
       }
     }
+
+    // Auto-collapse cards when resized below threshold
+    const cardResizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const card = entry.target;
+        const agentId = card.id.replace('card-', '');
+        if (collapsedCards.has(agentId)) continue;
+        if (entry.contentRect.height < COLLAPSE_THRESHOLD) {
+          collapsedCards.add(agentId);
+          card.classList.add('collapsed');
+        }
+      }
+    });
 
     function diffStat(agent) {
       let added = 0, removed = 0;
@@ -841,7 +873,7 @@
         const visibleFiles = visibleFilesForAgent(a);
         const isCollapsed = collapsedCards.has(a.id);
         return `
-        <div class="agent-card ${isCollapsed ? 'collapsed' : ''}" id="card-${a.id}" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')">
+        <div class="agent-card ${isCollapsed ? 'collapsed' : ''}" id="card-${a.id}">
           <div class="agent-head" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragend="dragEnd(event)">
             <div class="agent-head-left">
               <span class="agent-id">${a.id}</span>
@@ -889,6 +921,8 @@
       agents.forEach(a => {
         const term = document.getElementById(`term-${a.id}`);
         term.scrollTop = term.scrollHeight;
+        const card = document.getElementById(`card-${a.id}`);
+        if (card) cardResizeObserver.observe(card);
       });
     }
 
@@ -1049,32 +1083,78 @@
       draggingId = agentId;
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', agentId);
-      const card = document.getElementById(`card-${agentId}`);
-      if (card) card.classList.add('dragging');
-    }
-
-    function dragOver(event) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
-    }
-
-    function dropCard(event, targetId) {
-      event.preventDefault();
-      const sourceId = event.dataTransfer.getData('text/plain') || draggingId;
-      if (!sourceId || sourceId === targetId) return;
-      const from = agents.findIndex(a => a.id === sourceId);
-      const to = agents.findIndex(a => a.id === targetId);
-      if (from === -1 || to === -1) return;
-      const [item] = agents.splice(from, 1);
-      agents.splice(to, 0, item);
-      render();
-      append(sourceId, `<ok> pane reordered before ${targetId}`);
+      // Delay adding class so the drag image captures the normal look
+      requestAnimationFrame(() => {
+        const card = document.getElementById(`card-${agentId}`);
+        if (card) card.classList.add('dragging');
+      });
     }
 
     function dragEnd(event) {
-      draggingId = null;
+      clearDropIndicators();
       document.querySelectorAll('.agent-card.dragging').forEach(el => el.classList.remove('dragging'));
+      draggingId = null;
     }
+
+    function clearDropIndicators() {
+      document.querySelectorAll('.agent-card.drop-above, .agent-card.drop-below').forEach(el => {
+        el.classList.remove('drop-above', 'drop-below');
+      });
+    }
+
+    // Use event delegation on the grid for dragover and drop
+    grid.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!draggingId) return;
+
+      clearDropIndicators();
+      const card = e.target.closest('.agent-card');
+      if (!card || card.id === `card-${draggingId}`) return;
+
+      const rect = card.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        card.classList.add('drop-above');
+      } else {
+        card.classList.add('drop-below');
+      }
+    });
+
+    grid.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (!draggingId) return;
+
+      const card = e.target.closest('.agent-card');
+      if (!card) return;
+
+      const targetId = card.id.replace('card-', '');
+      if (targetId === draggingId) return;
+
+      const from = agents.findIndex(a => a.id === draggingId);
+      const to = agents.findIndex(a => a.id === targetId);
+      if (from === -1 || to === -1) return;
+
+      const rect = card.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const insertAfter = e.clientY >= midY;
+
+      const [item] = agents.splice(from, 1);
+      // Recalculate target index after removal
+      let newIdx = agents.findIndex(a => a.id === targetId);
+      if (insertAfter) newIdx++;
+      agents.splice(newIdx, 0, item);
+
+      clearDropIndicators();
+      render();
+    });
+
+    grid.addEventListener('dragleave', function(e) {
+      // Only clear if actually leaving the grid
+      if (!grid.contains(e.relatedTarget)) {
+        clearDropIndicators();
+      }
+    });
 
     /* --- Zoom view: diff + terminal --- */
 

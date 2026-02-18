@@ -3,15 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Orchestra — tmux wall</title>
+  <title>Agent Orchestra — tmux + file tree</title>
   <style>
     :root {
       --bg:#0a0f1a;
       --panel:#111827;
+      --panel-2:#0f1728;
       --border:#24324d;
       --text:#dbe7ff;
       --muted:#97acd6;
       --ok:#34d399;
+      --warn:#fbbf24;
+      --err:#f87171;
+      --add:#22c55e;
+      --mod:#f59e0b;
+      --del:#ef4444;
     }
     * { box-sizing: border-box; }
     body {
@@ -20,10 +26,12 @@
       color:var(--text);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .wrap { max-width: 1500px; margin: 0 auto; padding: 16px; }
     .top {
       display:flex; justify-content:space-between; align-items:center;
       margin-bottom:14px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .title { font-size:22px; font-weight:700; }
     .sub { color:var(--muted); font-size:13px; }
@@ -44,17 +52,18 @@
 
     .grid {
       display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap:12px;
     }
 
-    .pane {
+    .agent-card {
       border:1px solid var(--border);
       border-radius:12px;
       overflow:hidden;
       background:var(--panel);
     }
-    .pane-head {
+
+    .agent-head {
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -62,7 +71,10 @@
       border-bottom:1px solid var(--border);
       background:#0f182a;
       font-size:13px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
+
     .chip {
       font-size:12px;
       border:1px solid #2f4f7e;
@@ -71,18 +83,35 @@
       padding:4px 8px;
       color:#c7ddff;
     }
+
+    .split {
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      min-height: 320px;
+    }
+
+    .pane-side, .tree-side {
+      background:var(--panel-2);
+    }
+
+    .pane-side {
+      border-right:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+    }
+
     .term {
-      height:280px;
+      flex:1;
       overflow:auto;
       padding:10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
       line-height:1.45;
-      background:#0b1220;
       color:#cce0ff;
       white-space:pre-wrap;
+      min-height: 220px;
     }
-    .term .ok { color: var(--ok); }
+
     .pane-input {
       border-top:1px solid var(--border);
       display:flex;
@@ -91,6 +120,72 @@
       background:#0f182a;
     }
     .pane-input input { flex:1; }
+
+    .tree-wrap {
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+
+    .tree-head {
+      padding:10px;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .tree {
+      padding:10px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:12px;
+      line-height:1.5;
+      flex:1;
+    }
+
+    .tree-line {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 8px;
+      padding:2px 0;
+    }
+
+    .tree-name { color:#d9e6ff; }
+    .indent-1 { padding-left: 14px; }
+    .indent-2 { padding-left: 28px; }
+
+    .status {
+      font-size:11px;
+      border-radius:999px;
+      padding:2px 7px;
+      border:1px solid transparent;
+      white-space: nowrap;
+    }
+    .status.clean { color:#93a8cf; border-color:#3a4c72; background:#1b2944; }
+    .status.add { color:#d1fae5; border-color:#166534; background:#14532d; }
+    .status.mod { color:#fef3c7; border-color:#92400e; background:#78350f; }
+    .status.del { color:#fee2e2; border-color:#991b1b; background:#7f1d1d; }
+
+    .legend {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .legend .dot {
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      display:inline-block;
+      margin-right:4px;
+    }
 
     .note {
       margin-top:12px;
@@ -102,8 +197,9 @@
       background:#0e1728;
     }
 
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
+    @media (max-width: 1100px) {
+      .split { grid-template-columns: 1fr; }
+      .pane-side { border-right:none; border-bottom:1px solid var(--border); }
     }
   </style>
 </head>
@@ -111,77 +207,154 @@
   <div class="wrap">
     <div class="top">
       <div>
-        <div class="title">🧵 Agent tmux Wall</div>
-        <div class="sub">Each agent is viewed like a direct remote tmux pane.</div>
+        <div class="title">🧵 Agent tmux Wall + File Tree</div>
+        <div class="sub">Per-agent dual view: live pane on the left, git-aware file tree on the right.</div>
       </div>
-      <div class="chip">Simplified v1</div>
+      <div class="chip">Dual view v2</div>
     </div>
 
     <div class="controls">
-      <select id="newAgent">
+      <select id="focusAgent">
         <option value="planner-1">planner-1</option>
         <option value="coder-2">coder-2</option>
         <option value="tester-3">tester-3</option>
         <option value="ops-1">ops-1</option>
       </select>
       <button onclick="focusAgent()">Focus Agent</button>
-      <button onclick="broadcast('status')">Broadcast: status</button>
-      <button onclick="broadcast('pytest -q')">Broadcast: pytest -q</button>
-      <button onclick="broadcast('git status')">Broadcast: git status</button>
+      <button onclick="broadcast('git status --short')">Broadcast: git status --short</button>
+      <button onclick="broadcast('npm test')">Broadcast: npm test</button>
+      <button onclick="randomFileChange()">Simulate file change</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
+    <div class="legend">
+      <span><span class="dot" style="background:var(--add)"></span>added</span>
+      <span><span class="dot" style="background:var(--mod)"></span>modified</span>
+      <span><span class="dot" style="background:var(--del)"></span>deleted</span>
+      <span><span class="dot" style="background:#6b7ea8"></span>clean</span>
+    </div>
+
     <div class="note">
-      <strong>Design intent:</strong> keep orchestration dead simple — a wall of panes + optional broadcast input.
-      Backend hookup would map each pane to a real tmux session/pane via websocket.
+      <strong>Backend hookup idea:</strong> map left panel to real tmux pane stream, and right panel to `git status --porcelain` parsed into a per-agent file tree.
     </div>
   </div>
 
   <script>
     const agents = [
-      { id:'planner-1', session:'orch', pane:'0.0', logs:[
-        '[09:42:11] attached to tmux orch:0.0',
-        '[09:42:15] planning backlog split for epic #42',
-        '[09:42:22] <ok> ready for next command'
-      ]},
-      { id:'coder-2', session:'orch', pane:'0.1', logs:[
-        '[09:42:09] attached to tmux orch:0.1',
-        '[09:42:16] editing src/auth/middleware.ts',
-        '[09:42:29] running targeted tests...'
-      ]},
-      { id:'tester-3', session:'orch', pane:'1.0', logs:[
-        '[09:42:08] attached to tmux orch:1.0',
-        '[09:42:19] pytest -q tests/integration',
-        '[09:42:36] 48 passed, 2 flaky retries'
-      ]},
-      { id:'ops-1', session:'orch', pane:'1.1', logs:[
-        '[09:42:05] attached to tmux orch:1.1',
-        '[09:42:17] checking deploy health',
-        '[09:42:31] memory stable: 27%'
-      ]}
+      {
+        id:'planner-1', session:'orch', pane:'0.0',
+        logs:[
+          '[09:42:11] attached to tmux orch:0.0',
+          '[09:42:15] planning backlog split for epic #42',
+          '[09:42:22] <ok> ready for next command'
+        ],
+        files:[
+          {name:'docs/', level:0, state:'clean'},
+          {name:'epic-42-plan.md', level:1, state:'mod'},
+          {name:'handoff-notes.md', level:1, state:'add'},
+          {name:'src/', level:0, state:'clean'},
+          {name:'routing-map.json', level:1, state:'clean'}
+        ]
+      },
+      {
+        id:'coder-2', session:'orch', pane:'0.1',
+        logs:[
+          '[09:42:09] attached to tmux orch:0.1',
+          '[09:42:16] editing src/auth/middleware.ts',
+          '[09:42:29] running targeted tests...'
+        ],
+        files:[
+          {name:'src/', level:0, state:'clean'},
+          {name:'auth/', level:1, state:'clean'},
+          {name:'middleware.ts', level:2, state:'mod'},
+          {name:'token-service.ts', level:2, state:'add'},
+          {name:'tests/', level:0, state:'clean'},
+          {name:'auth.middleware.spec.ts', level:1, state:'mod'}
+        ]
+      },
+      {
+        id:'tester-3', session:'orch', pane:'1.0',
+        logs:[
+          '[09:42:08] attached to tmux orch:1.0',
+          '[09:42:19] pytest -q tests/integration',
+          '[09:42:36] 48 passed, 2 flaky retries'
+        ],
+        files:[
+          {name:'reports/', level:0, state:'clean'},
+          {name:'integration-junit.xml', level:1, state:'mod'},
+          {name:'flake-log.txt', level:1, state:'add'},
+          {name:'snapshots/', level:0, state:'clean'},
+          {name:'baseline.json', level:1, state:'clean'}
+        ]
+      },
+      {
+        id:'ops-1', session:'orch', pane:'1.1',
+        logs:[
+          '[09:42:05] attached to tmux orch:1.1',
+          '[09:42:17] checking deploy health',
+          '[09:42:31] memory stable: 27%'
+        ],
+        files:[
+          {name:'infra/', level:0, state:'clean'},
+          {name:'deploy.yaml', level:1, state:'mod'},
+          {name:'rollback.sh', level:1, state:'clean'},
+          {name:'alerts/', level:0, state:'clean'},
+          {name:'oncall-policy.md', level:1, state:'del'}
+        ]
+      }
     ];
 
     const grid = document.getElementById('grid');
 
     function render() {
       grid.innerHTML = agents.map(a => `
-        <div class="pane" id="pane-${a.id}">
-          <div class="pane-head">
+        <div class="agent-card" id="card-${a.id}">
+          <div class="agent-head">
             <div><strong>${a.id}</strong> <span style="color:#97acd6">(${a.session}:${a.pane})</span></div>
             <span class="chip">live</span>
           </div>
-          <div class="term" id="term-${a.id}">${a.logs.join('\n')}</div>
-          <div class="pane-input">
-            <input id="in-${a.id}" placeholder="send command to ${a.id} (tmux send-keys)" />
-            <button onclick="send('${a.id}')">Send</button>
+
+          <div class="split">
+            <div class="pane-side">
+              <div class="term" id="term-${a.id}">${a.logs.join('\n')}</div>
+              <div class="pane-input">
+                <input id="in-${a.id}" placeholder="send command to ${a.id} (tmux send-keys)" />
+                <button onclick="send('${a.id}')">Send</button>
+              </div>
+            </div>
+
+            <div class="tree-side">
+              <div class="tree-wrap">
+                <div class="tree-head">
+                  <span>File tree</span>
+                  <span class="chip">changed files: ${a.files.filter(f => f.state !== 'clean').length}</span>
+                </div>
+                <div class="tree" id="tree-${a.id}">
+                  ${a.files.map(f => `
+                    <div class="tree-line indent-${Math.min(f.level,2)}">
+                      <span class="tree-name">${f.name}</span>
+                      <span class="status ${f.state}">${label(f.state)}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       `).join('');
+
       agents.forEach(a => {
         const term = document.getElementById(`term-${a.id}`);
         term.scrollTop = term.scrollHeight;
       });
+    }
+
+    function label(state) {
+      if (state === 'add') return 'added';
+      if (state === 'mod') return 'modified';
+      if (state === 'del') return 'deleted';
+      return 'clean';
     }
 
     function append(agentId, line) {
@@ -208,23 +381,34 @@
     }
 
     function focusAgent() {
-      const id = document.getElementById('newAgent').value;
-      const pane = document.getElementById(`pane-${id}`);
+      const id = document.getElementById('focusAgent').value;
+      const pane = document.getElementById(`card-${id}`);
       if (pane) pane.scrollIntoView({ behavior:'smooth', block:'center' });
       append(id, '<ok> focused in UI');
     }
 
-    // tiny fake live stream
+    function randomFileChange() {
+      const a = agents[Math.floor(Math.random() * agents.length)];
+      const mutable = a.files.filter(f => !f.name.endsWith('/'));
+      if (!mutable.length) return;
+      const f = mutable[Math.floor(Math.random() * mutable.length)];
+      const states = ['clean','mod','add','del'];
+      f.state = states[Math.floor(Math.random() * states.length)];
+      append(a.id, `git status update: ${f.name} -> ${label(f.state)}`);
+      render();
+    }
+
+    // fake live activity
     setInterval(() => {
       const sample = [
         'heartbeat ok',
-        'stdout: task progress +1 step',
+        'stdout: progress +1 step',
         'running quick check',
         '<ok> awaiting instruction'
       ];
       const a = agents[Math.floor(Math.random() * agents.length)];
       append(a.id, sample[Math.floor(Math.random() * sample.length)]);
-    }, 5000);
+    }, 6000);
 
     render();
   </script>

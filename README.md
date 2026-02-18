@@ -1,15 +1,15 @@
 # Agent Orchestra UI (Mock)
 
-## v1 Simplification: tmux wall
+## v2: tmux wall + dual-pane file awareness
 
-This version intentionally strips the dashboard down to the core concept:
+This version keeps the simple tmux-wall idea but adds a second panel per agent:
 
-- one pane per agent
-- each pane behaves like a remote tmux view
-- per-pane command input (send-keys style)
-- optional broadcast command controls
+- **Left:** remote tmux pane view + command input
+- **Right:** file tree with change icons (`clean`, `added`, `modified`, `deleted`)
 
-No aggregate KPIs, no heavy orchestration chrome.
+Why this works:
+- terminal gives execution transparency
+- file tree gives instant code-change context
 
 ## Run
 ```bash
@@ -18,7 +18,6 @@ python3 -m http.server 8091 --directory .
 
 Open `http://localhost:8091`.
 
-## Next step (backend hookup)
-- map each pane to a real tmux session/pane
-- stream pane output over websocket
-- wire input to tmux `send-keys`
+## Next backend step
+- left panel: stream actual tmux pane output
+- right panel: parse `git status --porcelain` into tree + status badges

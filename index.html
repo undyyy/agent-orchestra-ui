@@ -41,7 +41,7 @@
       display:flex; gap:8px; flex-wrap:wrap;
       margin-bottom:14px;
     }
-    select, input, button {
+    input, button {
       background:#16233b;
       color:var(--text);
       border:1px solid #335081;
@@ -88,6 +88,24 @@
       border-radius:999px;
       padding:4px 8px;
       color:#c7ddff;
+    }
+
+    .session-inline {
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      color:#97acd6;
+      font-size:12px;
+    }
+
+    .session-inline input {
+      width:80px;
+      padding:3px 6px;
+      border-radius:6px;
+      border:1px solid #355488;
+      background:#13223b;
+      color:#dbe7ff;
+      font-size:12px;
     }
 
     .agent-head-right {
@@ -313,13 +331,6 @@
     </div>
 
     <div class="controls">
-      <select id="focusAgent">
-        <option value="planner-1">planner-1</option>
-        <option value="coder-2">coder-2</option>
-        <option value="tester-3">tester-3</option>
-        <option value="ops-1">ops-1</option>
-      </select>
-      <button onclick="focusAgent()">Focus Agent</button>
       <button onclick="broadcast('git status --short')">Broadcast: git status --short</button>
       <button onclick="broadcast('npm test')">Broadcast: npm test</button>
       <button onclick="randomFileChange()">Simulate file change</button>
@@ -420,7 +431,13 @@
         return `
         <div class="agent-card" id="card-${a.id}" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')" ondragend="dragEnd(event)">
           <div class="agent-head">
-            <div><strong>${a.id}</strong> <span style="color:#97acd6">(${a.session}:${a.pane})</span></div>
+            <div>
+              <strong>${a.id}</strong>
+              <span class="session-inline">(
+                <input value="${a.session}" onchange="renameSession('${a.id}', this.value)" title="Rename tmux session" />
+                : ${a.pane})
+              </span>
+            </div>
             <div class="agent-head-right">
               <span class="drag-handle" title="Drag to rearrange">⋮⋮ drag</span>
               <button class="mini-btn" onclick="moveAgent('${a.id}', -1)">↑</button>
@@ -512,11 +529,14 @@
       agents.forEach(a => append(a.id, `<ok> command queued`));
     }
 
-    function focusAgent() {
-      const id = document.getElementById('focusAgent').value;
-      const pane = document.getElementById(`card-${id}`);
-      if (pane) pane.scrollIntoView({ behavior:'smooth', block:'center' });
-      append(id, '<ok> focused in UI');
+    function renameSession(agentId, value) {
+      const a = agents.find(x => x.id === agentId);
+      if (!a) return;
+      const next = (value || '').trim();
+      if (!next) return;
+      a.session = next;
+      append(agentId, `<ok> session renamed to ${next}`);
+      render();
     }
 
     function randomFileChange() {

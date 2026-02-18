@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agent Orchestra — tmux + file tree</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
     :root {
       --bg:#0a0f1a;
       --panel:#111827;
@@ -223,9 +224,9 @@
     .tree {
       padding:10px;
       overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
-      line-height:1.5;
+      line-height:1.55;
       flex:1;
     }
 
@@ -234,10 +235,25 @@
       justify-content:space-between;
       align-items:center;
       gap: 8px;
-      padding:2px 0;
+      padding:4px 6px;
+      border-radius:8px;
     }
 
-    .tree-name { color:#d9e6ff; }
+    .tree-line:hover {
+      background:#16243d;
+    }
+
+    .tree-name {
+      color:#d9e6ff;
+      display:flex;
+      align-items:center;
+      gap:7px;
+    }
+
+    .file-icon {
+      font-size:13px;
+      opacity:0.95;
+    }
     .indent-1 { padding-left: 14px; }
     .indent-2 { padding-left: 28px; }
 
@@ -438,7 +454,7 @@
                 <div class="tree" id="tree-${a.id}">
                   ${visibleFiles.length ? visibleFiles.map(f => `
                     <div class="tree-line indent-${Math.min(f.level,2)}">
-                      <span class="tree-name">${f.name}</span>
+                      <span class="tree-name"><span class="file-icon">${fileIcon(f)}</span>${f.name}</span>
                       <span class="status ${f.state}">${label(f.state)}</span>
                     </div>
                   `).join('') : '<div class="meta">No changed files.</div>'}
@@ -461,6 +477,16 @@
       if (state === 'mod') return 'modified';
       if (state === 'del') return 'deleted';
       return 'clean';
+    }
+
+    function fileIcon(file) {
+      const n = file.name.toLowerCase();
+      if (n.endsWith('/')) return '📁';
+      if (n.endsWith('.ts') || n.endsWith('.js') || n.endsWith('.json')) return '🧩';
+      if (n.endsWith('.md')) return '📝';
+      if (n.endsWith('.xml') || n.endsWith('.yml') || n.endsWith('.yaml')) return '⚙️';
+      if (n.endsWith('.txt') || n.endsWith('.log')) return '📄';
+      return '📄';
     }
 
     function append(agentId, line) {

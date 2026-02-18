@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Orchestra — Multi-Agent Command Center</title>
+  <style>
+    :root {
+      --bg:#0b1220;
+      --panel:#121b2f;
+      --panel-2:#17233d;
+      --text:#e6edff;
+      --muted:#9ab0d6;
+      --ok:#3ddc97;
+      --warn:#ffcc66;
+      --err:#ff6b6b;
+      --accent:#62a4ff;
+      --chip:#233557;
+      --border:#25365a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(180deg,#0b1220,#0a101c);
+      color:var(--text);
+    }
+    .layout { display:grid; grid-template-columns: 280px 1fr; min-height:100vh; }
+    .sidebar {
+      border-right:1px solid var(--border);
+      background:#0e1728;
+      padding:18px;
+    }
+    .brand { font-weight:700; font-size:20px; margin-bottom:8px; }
+    .subtitle { color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .nav a {
+      display:block;
+      color:var(--text);
+      text-decoration:none;
+      padding:10px 12px;
+      border-radius:10px;
+      margin-bottom:6px;
+      background:transparent;
+      border:1px solid transparent;
+    }
+    .nav a.active { background:var(--panel); border-color:var(--border); }
+    .nav a:hover { background:#121c30; }
+
+    .content { padding:18px; }
+    .topbar {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:16px;
+    }
+    .kpis {
+      display:grid;
+      grid-template-columns: repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+    }
+    .kpi-title { color:var(--muted); font-size:12px; }
+    .kpi-value { font-size:26px; font-weight:700; margin-top:6px; }
+
+    .main-grid {
+      display:grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap:12px;
+    }
+
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #203150; }
+    th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+
+    .chip {
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; padding:4px 8px; border-radius:999px;
+      background:var(--chip); border:1px solid #314a78;
+    }
+    .dot { width:8px; height:8px; border-radius:999px; display:inline-block; }
+    .ok { background:var(--ok); }
+    .warn { background:var(--warn); }
+    .err { background:var(--err); }
+
+    .log {
+      background:var(--panel-2);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+      height:360px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:12px;
+      line-height:1.5;
+    }
+    .log-line { margin-bottom:8px; color:#c7d7ff; }
+    .log-line .time { color:#7ea0d6; }
+    .controls { display:flex; gap:8px; margin-top:10px; }
+    button {
+      background:#1f3358; color:#dbe8ff; border:1px solid #345286;
+      border-radius:8px; padding:8px 10px; cursor:pointer;
+    }
+    button:hover { background:#284270; }
+
+    .footer-note { color:var(--muted); font-size:12px; margin-top:10px; }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-right:none; border-bottom:1px solid var(--border); }
+      .kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .main-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">🎛️ Agent Orchestra</div>
+      <div class="subtitle">High-level command view for many agents</div>
+      <nav class="nav">
+        <a class="active" href="#">Overview</a>
+        <a href="#">Agents</a>
+        <a href="#">Queues</a>
+        <a href="#">Runs</a>
+        <a href="#">Errors</a>
+        <a href="#">Settings</a>
+      </nav>
+      <div class="footer-note" style="margin-top:18px;">
+        Mock UI v0.1 • designed for real-time orchestration at a glance.
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <h2 style="margin:0;">Overview</h2>
+        <div class="chip"><span class="dot ok"></span> Auto-refresh: 2s</div>
+      </div>
+
+      <section class="kpis">
+        <div class="card"><div class="kpi-title">Active Agents</div><div class="kpi-value" id="kpi-active">9</div></div>
+        <div class="card"><div class="kpi-title">Queued Tasks</div><div class="kpi-value" id="kpi-queue">17</div></div>
+        <div class="card"><div class="kpi-title">Failures (24h)</div><div class="kpi-value" id="kpi-fail">3</div></div>
+        <div class="card"><div class="kpi-title">Avg Cycle Time</div><div class="kpi-value" id="kpi-cycle">42s</div></div>
+      </section>
+
+      <section class="main-grid">
+        <div class="card">
+          <h3 style="margin-top:0;">Agent Fleet Status</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Status</th>
+                <th>Current Task</th>
+                <th>CPU</th>
+                <th>Last Seen</th>
+              </tr>
+            </thead>
+            <tbody id="agents-body"></tbody>
+          </table>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:12px;">
+            <h3 style="margin-top:0;">Live Event Stream</h3>
+            <div class="log" id="log"></div>
+            <div class="controls">
+              <button onclick="injectTask()">Simulate Task</button>
+              <button onclick="injectFailure()">Simulate Failure</button>
+              <button onclick="clearLog()">Clear</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top:0;">Control Actions (mock)</h3>
+            <div class="controls" style="flex-wrap:wrap;">
+              <button>Pause all</button>
+              <button>Resume all</button>
+              <button>Retry failed</button>
+              <button>Rebalance queue</button>
+            </div>
+            <div class="footer-note">These actions are UI mock buttons for flow testing.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const agents = [
+      { name:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now' },
+      { name:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now' },
+      { name:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago' },
+      { name:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago' },
+      { name:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now' },
+      { name:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now' }
+    ];
+
+    const body = document.getElementById('agents-body');
+    const log = document.getElementById('log');
+
+    function statusChip(status) {
+      if (status === 'running') return `<span class="chip"><span class="dot ok"></span>running</span>`;
+      if (status === 'warning') return `<span class="chip"><span class="dot warn"></span>warning</span>`;
+      if (status === 'error') return `<span class="chip"><span class="dot err"></span>error</span>`;
+      return `<span class="chip"><span class="dot" style="background:#9ab0d6"></span>idle</span>`;
+    }
+
+    function renderTable() {
+      body.innerHTML = agents.map(a => `
+        <tr>
+          <td>${a.name}</td>
+          <td>${statusChip(a.status)}</td>
+          <td>${a.task}</td>
+          <td>${a.cpu}%</td>
+          <td>${a.seen}</td>
+        </tr>
+      `).join('');
+    }
+
+    function addLog(message) {
+      const t = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = `<span class="time">[${t}]</span> ${message}`;
+      log.prepend(div);
+      while (log.children.length > 80) log.removeChild(log.lastChild);
+    }
+
+    function randomTick() {
+      agents.forEach(a => {
+        a.cpu = Math.max(3, Math.min(95, a.cpu + Math.floor((Math.random() - 0.5) * 12)));
+      });
+      const active = agents.filter(a => a.status === 'running').length;
+      document.getElementById('kpi-active').textContent = active;
+      document.getElementById('kpi-queue').textContent = Math.max(0, 10 + Math.floor(Math.random() * 12));
+      renderTable();
+    }
+
+    function injectTask() {
+      const names = ['planner-1','coder-2','tester-3','research-1'];
+      const who = names[Math.floor(Math.random()*names.length)];
+      addLog(`${who} accepted task • queue latency: ${Math.floor(Math.random()*5)+1}s`);
+    }
+
+    function injectFailure() {
+      const idx = Math.floor(Math.random() * agents.length);
+      agents[idx].status = 'error';
+      agents[idx].task = 'Needs intervention';
+      document.getElementById('kpi-fail').textContent = Number(document.getElementById('kpi-fail').textContent) + 1;
+      addLog(`❗ ${agents[idx].name} failed test shard #${Math.floor(Math.random()*20)+1} (timeout)`);
+      renderTable();
+    }
+
+    function clearLog() { log.innerHTML = ''; }
+
+    renderTable();
+    addLog('Dashboard initialized');
+    addLog('Connected to orchestration bus (mock)');
+    setInterval(randomTick, 2000);
+  </script>
+</body>
+</html>

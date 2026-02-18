@@ -48,8 +48,15 @@
       border-radius:8px;
       padding:8px 10px;
     }
-    button { cursor:pointer; }
+    button {
+      cursor:pointer;
+      transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+    }
     button:hover { background:#1e3153; }
+    button:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
+    }
 
     .grid {
       display:grid;
@@ -57,28 +64,114 @@
       gap:12px;
     }
 
+    /* --- Card entrance animation --- */
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .agent-card {
       border:1px solid var(--border);
       border-radius:12px;
       overflow:hidden;
       background:var(--panel);
+      position: relative;
+      animation: cardSlideIn .45s cubic-bezier(.22,.68,.36,1) both;
     }
+
+    /* Gradient top border accent */
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--card-gradient);
+      z-index: 5;
+    }
+
+    .agent-card:nth-child(1) { --card-gradient: linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa); animation-delay: 0s; }
+    .agent-card:nth-child(2) { --card-gradient: linear-gradient(90deg, #3b82f6, #06b6d4, #22d3ee); animation-delay: .07s; }
+    .agent-card:nth-child(3) { --card-gradient: linear-gradient(90deg, #10b981, #34d399, #6ee7b7); animation-delay: .14s; }
+    .agent-card:nth-child(4) { --card-gradient: linear-gradient(90deg, #f59e0b, #f97316, #fb923c); animation-delay: .21s; }
+    .agent-card:nth-child(5) { --card-gradient: linear-gradient(90deg, #ec4899, #f43f5e, #fb7185); animation-delay: .28s; }
+    .agent-card:nth-child(6) { --card-gradient: linear-gradient(90deg, #8b5cf6, #d946ef, #f0abfc); animation-delay: .35s; }
 
     .agent-card.dragging {
       opacity: 0.55;
       border-color: #4c78bd;
     }
 
+    .agent-card.collapsed .split {
+      display: none;
+    }
+
+    .agent-card.collapsed .agent-head {
+      border-bottom: none;
+    }
+
     .agent-head {
       display:flex;
-      justify-content:space-between;
       align-items:center;
       padding:10px 12px;
       border-bottom:1px solid var(--border);
       background:#0f182a;
       font-size:13px;
       gap: 8px;
-      flex-wrap: wrap;
+      cursor:grab;
+      user-select:none;
+    }
+
+    .agent-head:active {
+      cursor:grabbing;
+    }
+
+    .agent-head-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .collapse-btn {
+      background: none;
+      border: none;
+      color: #4a5e80;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform .2s ease, color .15s ease;
+      flex-shrink: 0;
+    }
+    .collapse-btn:hover { color: var(--text); background: none; }
+    .agent-card.collapsed .collapse-btn { transform: rotate(-90deg); }
+
+    .last-msg {
+      color: #6b7ea8;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 0;
+      flex: 1;
+      min-width: 0;
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+
+    .agent-card.collapsed .last-msg {
+      opacity: 1;
     }
 
     .chip {
@@ -90,19 +183,48 @@
       color:#c7ddff;
     }
 
-    .session-inline {
+    /* --- GitHub-style diff stat --- */
+    .diff-stat {
       display:inline-flex;
       align-items:center;
-      gap:5px;
+      gap:6px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size:12px;
+      font-weight:600;
+    }
+
+    .diff-add {
+      color:#4ade80;
+    }
+
+    .diff-rm {
+      color:#f87171;
+    }
+
+
+    .agent-head-left {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+
+    .agent-id {
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .session-info {
+      display:flex;
+      align-items:center;
+      gap:4px;
       color:#97acd6;
       font-size:12px;
       white-space: nowrap;
-      vertical-align: middle;
-      margin-left: 4px;
     }
 
-    .session-inline input {
-      width:80px;
+    .session-info input {
+      width:72px;
       height:24px;
       padding:2px 6px;
       border-radius:6px;
@@ -111,42 +233,18 @@
       color:#dbe7ff;
       font-size:12px;
       line-height: 20px;
-      vertical-align: middle;
     }
 
     .pane-suffix {
-      display:inline-flex;
-      align-items:center;
-      line-height:1;
-    }
-
-    .agent-head-right {
-      display:flex;
-      gap:6px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .mini-btn {
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:7px;
-      border:1px solid #355488;
-      background:#162844;
-      color:#d9e8ff;
-      cursor:pointer;
-    }
-
-    .mini-btn:hover { background:#21365b; }
-
-    .drag-handle {
+      color:#97acd6;
       font-size:12px;
-      color:#9db6de;
-      border:1px dashed #3b5887;
-      padding:4px 7px;
-      border-radius:8px;
-      cursor:grab;
-      user-select:none;
+    }
+
+
+    /* session input should remain clickable inside draggable head */
+    .agent-head input {
+      cursor:text;
+      user-select:text;
     }
 
     .split {
@@ -163,18 +261,68 @@
       border-right:1px solid var(--border);
       display:flex;
       flex-direction:column;
+      position: relative;
     }
 
     .term {
       flex:1;
       overflow:auto;
       padding:10px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
       line-height:1.45;
       color:#cce0ff;
       white-space:pre-wrap;
       min-height: 220px;
+      position: relative;
+    }
+
+    /* --- Blinking cursor at end of terminal --- */
+    .term::after {
+      content: '█';
+      animation: cursorBlink 1s step-end infinite;
+      color: #6ee7b7;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0; }
+    }
+
+    /* --- New log line fade-in --- */
+    @keyframes logFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .log-line {
+      animation: logFadeIn .3s ease both;
+    }
+
+    /* --- Subtle scanline overlay --- */
+    .term-overlay {
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      z-index: 1;
     }
 
     .pane-input {
@@ -262,15 +410,36 @@
 
     .tree-line {
       display:flex;
-      justify-content:space-between;
       align-items:center;
       gap: 8px;
       padding:4px 6px;
-      border-radius:8px;
+      border-radius:6px;
+      transition: background .15s ease;
     }
 
     .tree-line:hover {
       background:#16243d;
+    }
+
+    .tree-line.add {
+      background: rgba(34, 197, 94, 0.08);
+    }
+    .tree-line.add:hover {
+      background: rgba(34, 197, 94, 0.14);
+    }
+
+    .tree-line.mod {
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .tree-line.mod:hover {
+      background: rgba(245, 158, 11, 0.14);
+    }
+
+    .tree-line.del {
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .tree-line.del:hover {
+      background: rgba(239, 68, 68, 0.14);
     }
 
     .tree-name {
@@ -280,24 +449,36 @@
       gap:7px;
     }
 
+    .tree-line.add .tree-name { color:#86efac; }
+    .tree-line.mod .tree-name { color:#fde68a; }
+    .tree-line.del .tree-name { color:#fca5a5; }
+
+    .tree-line.folder {
+      cursor:pointer;
+    }
+
+    .folder-chevron {
+      display:inline-block;
+      font-size:10px;
+      width:12px;
+      text-align:center;
+      color:#6b7ea8;
+      transition: transform .15s ease;
+      flex-shrink:0;
+    }
+
+    .folder-chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+
     .file-icon {
       font-size:13px;
       opacity:0.95;
     }
-    .indent-1 { padding-left: 14px; }
-    .indent-2 { padding-left: 28px; }
-
-    .status {
-      font-size:11px;
-      border-radius:999px;
-      padding:2px 7px;
-      border:1px solid transparent;
-      white-space: nowrap;
-    }
-    .status.clean { color:#93a8cf; border-color:#3a4c72; background:#1b2944; }
-    .status.add { color:#d1fae5; border-color:#166534; background:#14532d; }
-    .status.mod { color:#fef3c7; border-color:#92400e; background:#78350f; }
-    .status.del { color:#fee2e2; border-color:#991b1b; background:#7f1d1d; }
+    .indent-0 { padding-left: 0; }
+    .indent-1 { padding-left: 18px; }
+    .indent-2 { padding-left: 36px; }
+    .indent-3 { padding-left: 54px; }
 
     .legend {
       display:flex;
@@ -325,6 +506,135 @@
       padding:10px;
       background:#0e1728;
     }
+
+    /* --- Activity indicator on terminal --- */
+    @keyframes activityFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .activity-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6ee7b7;
+      display: inline-block;
+      margin-left: 6px;
+      opacity: 0;
+      vertical-align: middle;
+    }
+
+    .activity-dot.flash {
+      animation: activityFlash .8s ease forwards;
+    }
+
+    /* --- Zoom overlay --- */
+    @keyframes zoomSlideIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .zoom-overlay {
+      position: fixed; inset: 24px 32px; z-index: 100;
+      background: var(--bg);
+      flex-direction: column;
+      animation: zoomSlideIn .3s cubic-bezier(.22,.68,.36,1) both;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
+
+    .zoom-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px;
+      background: #0f182a;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .zoom-header .zoom-file { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .zoom-header .zoom-agent { color: var(--muted); }
+    .zoom-close {
+      margin-left: auto;
+      background: none; border: 1px solid #3a5a8d;
+      color: var(--muted); border-radius: 6px;
+      padding: 4px 12px; font-size: 12px; cursor: pointer;
+    }
+    .zoom-close:hover { background: #1e3153; color: var(--text); }
+
+    .zoom-body {
+      flex: 1; min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+    }
+
+    .zoom-diff {
+      overflow: auto;
+      padding: 0;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12.5px; line-height: 1.5;
+    }
+
+    .zoom-tree-side {
+      border-left: 1px solid var(--border);
+      background: var(--panel-2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .zoom-tree-side .tree-head {
+      flex-shrink: 0;
+    }
+
+    .zoom-tree-side .tree {
+      flex: 1; overflow: auto;
+    }
+
+    .diff-line {
+      padding: 0 16px;
+      white-space: pre;
+    }
+    .diff-line.add { background: rgba(34,197,94,0.10); color: #86efac; }
+    .diff-line.del { background: rgba(239,68,68,0.10); color: #fca5a5; }
+    .diff-line.hunk { color: #67e8f9; background: rgba(103,232,249,0.06); }
+    .diff-line.ctx  { color: #97acd6; }
+    .diff-line.meta { color: #6b7ea8; }
+    .diff-line.file { color: #cce0ff; }
+
+    .zoom-term {
+      flex-shrink: 0;
+      height: 180px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-2);
+    }
+
+    .zoom-term-head {
+      padding: 6px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #0f182a;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .zoom-term .term {
+      flex: 1;
+      overflow: auto;
+      padding: 10px 16px;
+      min-height: 0;
+    }
+
+    .zoom-term .pane-input {
+      flex-shrink: 0;
+    }
+
+    .tree-line.clickable { cursor: pointer; }
 
     @media (max-width: 1100px) {
       .split { grid-template-columns: 1fr; }
@@ -362,6 +672,8 @@
     </div>
   </div>
 
+  <div id="zoom-overlay" class="zoom-overlay" style="display:none"></div>
+
   <script>
     const agents = [
       {
@@ -372,11 +684,11 @@
           '[09:42:22] <ok> ready for next command'
         ],
         files:[
-          {name:'docs/', level:0, state:'clean'},
-          {name:'epic-42-plan.md', level:1, state:'mod'},
-          {name:'handoff-notes.md', level:1, state:'add'},
-          {name:'src/', level:0, state:'clean'},
-          {name:'routing-map.json', level:1, state:'clean'}
+          {name:'docs/', level:0, state:'clean', add:0, rm:0},
+          {name:'epic-42-plan.md', level:1, state:'mod', add:23, rm:8},
+          {name:'handoff-notes.md', level:1, state:'add', add:41, rm:0},
+          {name:'src/', level:0, state:'clean', add:0, rm:0},
+          {name:'routing-map.json', level:1, state:'clean', add:0, rm:0}
         ]
       },
       {
@@ -387,12 +699,12 @@
           '[09:42:29] running targeted tests...'
         ],
         files:[
-          {name:'src/', level:0, state:'clean'},
-          {name:'auth/', level:1, state:'clean'},
-          {name:'middleware.ts', level:2, state:'mod'},
-          {name:'token-service.ts', level:2, state:'add'},
-          {name:'tests/', level:0, state:'clean'},
-          {name:'auth.middleware.spec.ts', level:1, state:'mod'}
+          {name:'src/', level:0, state:'clean', add:0, rm:0},
+          {name:'auth/', level:1, state:'clean', add:0, rm:0},
+          {name:'middleware.ts', level:2, state:'mod', add:14, rm:6},
+          {name:'token-service.ts', level:2, state:'add', add:87, rm:0},
+          {name:'tests/', level:0, state:'clean', add:0, rm:0},
+          {name:'auth.middleware.spec.ts', level:1, state:'mod', add:32, rm:11}
         ]
       },
       {
@@ -403,11 +715,11 @@
           '[09:42:36] 48 passed, 2 flaky retries'
         ],
         files:[
-          {name:'reports/', level:0, state:'clean'},
-          {name:'integration-junit.xml', level:1, state:'mod'},
-          {name:'flake-log.txt', level:1, state:'add'},
-          {name:'snapshots/', level:0, state:'clean'},
-          {name:'baseline.json', level:1, state:'clean'}
+          {name:'reports/', level:0, state:'clean', add:0, rm:0},
+          {name:'integration-junit.xml', level:1, state:'mod', add:5, rm:2},
+          {name:'flake-log.txt', level:1, state:'add', add:12, rm:0},
+          {name:'snapshots/', level:0, state:'clean', add:0, rm:0},
+          {name:'baseline.json', level:1, state:'clean', add:0, rm:0}
         ]
       },
       {
@@ -418,48 +730,135 @@
           '[09:42:31] memory stable: 27%'
         ],
         files:[
-          {name:'infra/', level:0, state:'clean'},
-          {name:'deploy.yaml', level:1, state:'mod'},
-          {name:'rollback.sh', level:1, state:'clean'},
-          {name:'alerts/', level:0, state:'clean'},
-          {name:'oncall-policy.md', level:1, state:'del'}
+          {name:'infra/', level:0, state:'clean', add:0, rm:0},
+          {name:'deploy.yaml', level:1, state:'mod', add:9, rm:3},
+          {name:'rollback.sh', level:1, state:'clean', add:0, rm:0},
+          {name:'alerts/', level:0, state:'clean', add:0, rm:0},
+          {name:'oncall-policy.md', level:1, state:'del', add:0, rm:27}
         ]
       }
     ];
 
     const grid = document.getElementById('grid');
     const fileTreeMode = Object.fromEntries(agents.map(a => [a.id, 'all']));
+    // Track collapsed folders per agent: { agentId: Set of folder indices }
+    const collapsedFolders = Object.fromEntries(agents.map(a => [a.id, new Set()]));
+    const collapsedCards = new Set();
 
-    function visibleFilesForAgent(agent) {
-      if (fileTreeMode[agent.id] === 'changed') {
-        return agent.files.filter(f => f.state !== 'clean');
+    function toggleCard(agentId) {
+      const card = document.getElementById(`card-${agentId}`);
+      if (!card) return;
+      if (collapsedCards.has(agentId)) {
+        collapsedCards.delete(agentId);
+        card.classList.remove('collapsed');
+      } else {
+        collapsedCards.add(agentId);
+        card.classList.add('collapsed');
       }
-      return agent.files;
+    }
+
+    function diffStat(agent) {
+      let added = 0, removed = 0;
+      agent.files.forEach(f => { added += f.add || 0; removed += f.rm || 0; });
+      return { added, removed };
+    }
+
+    function diffStatHtml(agent) {
+      const s = diffStat(agent);
+      return `<span class="diff-stat"><span class="diff-add">+${s.added}</span><span class="diff-rm">-${s.removed}</span></span>`;
+    }
+
+    function isFolder(f) {
+      return f.name.endsWith('/');
+    }
+
+    // Get children indices of a folder at given index
+    function getFolderChildren(files, folderIdx) {
+      const folderLevel = files[folderIdx].level;
+      const children = [];
+      for (let i = folderIdx + 1; i < files.length; i++) {
+        if (files[i].level <= folderLevel) break;
+        children.push(i);
+      }
+      return children;
+    }
+
+    // For "changed" mode: keep changed files + their ancestor folders
+    function visibleFilesForAgent(agent) {
+      const files = agent.files;
+      if (fileTreeMode[agent.id] === 'changed') {
+        const keep = new Set();
+        files.forEach((f, i) => {
+          if (f.state !== 'clean' && !isFolder(f)) {
+            keep.add(i);
+            // Walk backwards to find ancestor folders
+            for (let j = i - 1; j >= 0; j--) {
+              if (isFolder(files[j]) && files[j].level < files[i].level) {
+                keep.add(j);
+                if (files[j].level === 0) break;
+              }
+            }
+          }
+        });
+        return files.map((f, i) => ({ ...f, _idx: i })).filter((_, i) => keep.has(i));
+      }
+      return files.map((f, i) => ({ ...f, _idx: i }));
+    }
+
+    // Check if a file should be hidden due to collapsed parent
+    function isHiddenByCollapse(agentId, files, fileIdx) {
+      const collapsed = collapsedFolders[agentId];
+      const level = files[fileIdx].level;
+      // Walk backwards to find if any ancestor folder is collapsed
+      for (let j = fileIdx - 1; j >= 0; j--) {
+        if (isFolder(files[j]) && files[j].level < files[fileIdx].level) {
+          if (collapsed.has(j)) return true;
+          // Check this folder's ancestors too
+          if (isHiddenByCollapse(agentId, files, j)) return true;
+          if (files[j].level === 0) break;
+        }
+      }
+      return false;
+    }
+
+    function toggleFolder(agentId, fileIdx) {
+      const collapsed = collapsedFolders[agentId];
+      if (collapsed.has(fileIdx)) {
+        collapsed.delete(fileIdx);
+      } else {
+        collapsed.add(fileIdx);
+      }
+      renderTree(agentId);
+    }
+
+    function lastMsg(agent) {
+      if (!agent.logs.length) return '';
+      return agent.logs[agent.logs.length - 1];
     }
 
     function render() {
       grid.innerHTML = agents.map(a => {
         const visibleFiles = visibleFilesForAgent(a);
+        const isCollapsed = collapsedCards.has(a.id);
         return `
-        <div class="agent-card" id="card-${a.id}" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')" ondragend="dragEnd(event)">
-          <div class="agent-head">
-            <div>
-              <strong>${a.id}</strong>
-              <span class="session-inline">(<input value="${a.session}" onchange="renameSession('${a.id}', this.value)" title="Rename tmux session" /><span class="pane-suffix">: ${a.pane})</span></span>
+        <div class="agent-card ${isCollapsed ? 'collapsed' : ''}" id="card-${a.id}" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')">
+          <div class="agent-head" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragend="dragEnd(event)">
+            <div class="agent-head-left">
+              <span class="agent-id">${a.id}</span>
+              <span class="session-info">(<input value="${a.session}" onchange="renameSession('${a.id}', this.value)" title="Rename tmux session" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" /><span class="pane-suffix">: ${a.pane})</span></span>
             </div>
+            <span class="last-msg" id="lastmsg-${a.id}">${escHtml(lastMsg(a))}</span>
             <div class="agent-head-right">
-              <span class="drag-handle" title="Drag to rearrange">⋮⋮ drag</span>
-              <button class="mini-btn" onclick="moveAgent('${a.id}', -1)">↑</button>
-              <button class="mini-btn" onclick="moveAgent('${a.id}', 1)">↓</button>
-              <span class="chip">live</span>
+              <button class="collapse-btn" onclick="event.stopPropagation(); toggleCard('${a.id}')" title="Collapse/expand">▼</button>
             </div>
           </div>
 
           <div class="split">
             <div class="pane-side">
-              <div class="term" id="term-${a.id}">${a.logs.join('\n')}</div>
+              <div class="term-overlay"></div>
+              <div class="term" id="term-${a.id}">${a.logs.map((l, i) => `<span class="log-line">${l}</span>`).join('\n')}</div>
               <div class="pane-input">
-                <input id="in-${a.id}" placeholder="send command to ${a.id} (tmux send-keys)" />
+                <input id="in-${a.id}" placeholder="send command to ${a.id} (tmux send-keys)" onkeydown="if(event.key==='Enter')send('${a.id}')" />
                 <button onclick="send('${a.id}')">Send</button>
               </div>
             </div>
@@ -474,16 +873,11 @@
                       <span class="track-label">all</span>
                       <span class="track-label">changed</span>
                     </button>
-                    <span class="chip">changed: ${a.files.filter(f => f.state !== 'clean').length}</span>
+                    ${diffStatHtml(a)}
                   </div>
                 </div>
                 <div class="tree" id="tree-${a.id}">
-                  ${visibleFiles.length ? visibleFiles.map(f => `
-                    <div class="tree-line indent-${Math.min(f.level,2)}">
-                      <span class="tree-name"><span class="file-icon">${fileIcon(f)}</span>${f.name}</span>
-                      <span class="status ${f.state}">${label(f.state)}</span>
-                    </div>
-                  `).join('') : '<div class="meta">No changed files.</div>'}
+                  ${renderTreeHtml(a)}
                 </div>
               </div>
             </div>
@@ -512,6 +906,7 @@
       if (n.endsWith('.md')) return '📝';
       if (n.endsWith('.xml') || n.endsWith('.yml') || n.endsWith('.yaml')) return '⚙️';
       if (n.endsWith('.txt') || n.endsWith('.log')) return '📄';
+      if (n.endsWith('.sh')) return '⚡';
       return '📄';
     }
 
@@ -521,6 +916,34 @@
       const t = new Date().toLocaleTimeString();
       a.logs.push(`[${t}] ${line}`);
       if (a.logs.length > 120) a.logs.shift();
+
+      // Incremental DOM update instead of full re-render
+      const term = document.getElementById(`term-${a.id}`);
+      if (term) {
+        const span = document.createElement('span');
+        span.className = 'log-line';
+        span.textContent = `[${t}] ${line}`;
+        term.appendChild(document.createTextNode('\n'));
+        term.appendChild(span);
+        term.scrollTop = term.scrollHeight;
+
+        // Update last-message preview
+        const lm = document.getElementById(`lastmsg-${agentId}`);
+        if (lm) lm.textContent = `[${t}] ${line}`;
+
+        // Flash the activity dot
+        const card = document.getElementById(`card-${agentId}`);
+        if (card) {
+          const dot = card.querySelector('.live-dot');
+          if (dot) {
+            dot.style.animation = 'none';
+            dot.offsetHeight; // reflow
+            dot.style.animation = '';
+          }
+        }
+        return;
+      }
+
       render();
     }
 
@@ -545,7 +968,6 @@
       if (!next) return;
       a.session = next;
       append(agentId, `<ok> session renamed to ${next}`);
-      render();
     }
 
     function randomFileChange() {
@@ -556,28 +978,69 @@
       const states = ['clean','mod','add','del'];
       f.state = states[Math.floor(Math.random() * states.length)];
       append(a.id, `git status update: ${f.name} -> ${label(f.state)}`);
-      render();
+      renderTree(a.id);
+    }
+
+    function renderTreeHtml(agent) {
+      const visibleFiles = visibleFilesForAgent(agent);
+      const collapsed = collapsedFolders[agent.id];
+      if (!visibleFiles.length) return '<div class="meta">No changed files.</div>';
+
+      return visibleFiles.filter(f => !isHiddenByCollapse(agent.id, agent.files, f._idx)).map(f => {
+        const isFolderItem = isFolder(f);
+        const isCollapsed = collapsed.has(f._idx);
+        const stateClass = f.state === 'clean' ? '' : f.state;
+        const folderClass = isFolderItem ? 'folder' : '';
+        const chevron = isFolderItem
+          ? `<span class="folder-chevron ${isCollapsed ? 'collapsed' : ''}">▼</span>`
+          : '';
+        let onclick = '';
+        let clickableClass = '';
+        if (isFolderItem) {
+          onclick = `onclick="toggleFolder('${agent.id}', ${f._idx})"`;
+        } else {
+          onclick = `onclick="openFileZoom('${agent.id}', ${f._idx})"`;
+          clickableClass = 'clickable';
+        }
+
+        return `<div class="tree-line ${stateClass} ${folderClass} ${clickableClass} indent-${Math.min(f.level,3)}" ${onclick}>
+          <span class="tree-name">${chevron}<span class="file-icon">${fileIcon(f)}</span>${f.name}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTree(agentId) {
+      const a = agents.find(x => x.id === agentId);
+      if (!a) return;
+      const tree = document.getElementById(`tree-${agentId}`);
+      if (tree) {
+        tree.innerHTML = renderTreeHtml(a);
+      }
+      // Update the pill toggle state
+      const card = document.getElementById(`card-${agentId}`);
+      if (card) {
+        const pill = card.querySelector('.pill-toggle');
+        if (pill) {
+          pill.classList.toggle('changed', fileTreeMode[agentId] === 'changed');
+        }
+        // Update diff stat
+        const stat = card.querySelector('.tree-toggle .diff-stat');
+        if (stat) {
+          const s = diffStat(a);
+          stat.querySelector('.diff-add').textContent = `+${s.added}`;
+          stat.querySelector('.diff-rm').textContent = `-${s.removed}`;
+        }
+      }
     }
 
     function setTreeMode(agentId, mode) {
       fileTreeMode[agentId] = mode;
-      render();
+      renderTree(agentId);
     }
 
     function toggleTreeMode(agentId) {
       fileTreeMode[agentId] = fileTreeMode[agentId] === 'all' ? 'changed' : 'all';
-      render();
-    }
-
-    function moveAgent(agentId, delta) {
-      const idx = agents.findIndex(a => a.id === agentId);
-      if (idx === -1) return;
-      const next = idx + delta;
-      if (next < 0 || next >= agents.length) return;
-      const [item] = agents.splice(idx, 1);
-      agents.splice(next, 0, item);
-      render();
-      append(agentId, `<ok> pane moved ${delta < 0 ? 'up' : 'down'}`);
+      renderTree(agentId);
     }
 
     let draggingId = null;
@@ -586,7 +1049,8 @@
       draggingId = agentId;
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', agentId);
-      event.currentTarget.classList.add('dragging');
+      const card = document.getElementById(`card-${agentId}`);
+      if (card) card.classList.add('dragging');
     }
 
     function dragOver(event) {
@@ -610,6 +1074,392 @@
     function dragEnd(event) {
       draggingId = null;
       document.querySelectorAll('.agent-card.dragging').forEach(el => el.classList.remove('dragging'));
+    }
+
+    /* --- Zoom view: diff + terminal --- */
+
+    // Build the full path by walking back through ancestor folders
+    function getFullPath(files, idx) {
+      const parts = [files[idx].name];
+      let needLevel = files[idx].level - 1;
+      for (let j = idx - 1; j >= 0 && needLevel >= 0; j--) {
+        if (isFolder(files[j]) && files[j].level === needLevel) {
+          parts.unshift(files[j].name);
+          needLevel--;
+        }
+      }
+      return parts.join('');
+    }
+
+    function generateDiff(file, fullPath) {
+      const lines = [];
+      const addCount = file.add || 0;
+      const rmCount = file.rm || 0;
+      const baseName = file.name.replace(/\.[^.]+$/, '');
+      const ext = file.name.includes('.') ? file.name.split('.').pop() : '';
+
+      // Seed-based pseudo-random from filename
+      let seed = 0;
+      for (let i = 0; i < file.name.length; i++) seed = ((seed << 5) - seed + file.name.charCodeAt(i)) | 0;
+      const rand = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed & 0x7fffffff) / 2147483647; };
+
+      // Comment style based on extension
+      const comment = (ext === 'md' || ext === 'txt') ? '# ' :
+                       (ext === 'yaml' || ext === 'yml' || ext === 'sh') ? '# ' :
+                       (ext === 'xml') ? '<!-- ' : '// ';
+
+      // Context line templates
+      const ctxTemplates = [
+        `${comment}${baseName} implementation`,
+        '',
+        `${comment}Auto-generated section`,
+        ext === 'json' ? '{' : `${comment}Core logic`,
+        ext === 'ts' || ext === 'js' ? `import { config } from './config';` : `${comment}Configuration`,
+        ext === 'ts' || ext === 'js' ? `export function init() {` : `${comment}Initialization`,
+        ext === 'md' ? `## Overview` : `${comment}Module: ${baseName}`,
+        ext === 'yaml' || ext === 'yml' ? `version: "1.0"` : `${comment}Version header`,
+      ];
+
+      const addTemplates = [
+        ext === 'ts' || ext === 'js' ? `  const result = await validate(input);` : `${comment}Added validation step`,
+        ext === 'ts' || ext === 'js' ? `  if (!token) throw new AuthError('missing');` : `${comment}Guard clause added`,
+        ext === 'ts' || ext === 'js' ? `  logger.info('processing', { id });` : `${comment}Logging added`,
+        ext === 'md' ? `- Added new integration test coverage` : `  return { status: 'ok', data };`,
+        ext === 'yaml' || ext === 'yml' ? `  replicas: 3` : `  headers['X-Request-ID'] = uuid();`,
+        `  ${comment}TODO: add error boundary`,
+        ext === 'ts' || ext === 'js' ? `  const cached = cache.get(key);` : `${comment}Cache lookup`,
+        ext === 'spec.ts' ? `  expect(result.status).toBe(200);` : `  metrics.increment('${baseName}.calls');`,
+      ];
+
+      const rmTemplates = [
+        ext === 'ts' || ext === 'js' ? `  // legacy fallback - no longer needed` : `${comment}Deprecated path`,
+        ext === 'ts' || ext === 'js' ? `  const old = getSync(key);` : `${comment}Old synchronous call`,
+        ext === 'md' ? `- Manual testing steps (automated now)` : `  console.log('debug:', val);`,
+        `  ${comment}Removed in cleanup`,
+        ext === 'yaml' || ext === 'yml' ? `  timeout: 30` : `  temp = null;`,
+        ext === 'ts' || ext === 'js' ? `  if (env === 'dev') return mock();` : `${comment}Dev-only mock removed`,
+      ];
+
+      if (file.state === 'add') {
+        lines.push({ type: 'meta', text: `diff --git a/${fullPath} b/${fullPath}` });
+        lines.push({ type: 'meta', text: `new file mode 100644` });
+        lines.push({ type: 'meta', text: `--- /dev/null` });
+        lines.push({ type: 'meta', text: `+++ b/${fullPath}` });
+        lines.push({ type: 'hunk', text: `@@ -0,0 +1,${addCount} @@` });
+        for (let i = 0; i < addCount; i++) {
+          lines.push({ type: 'add', text: `+${addTemplates[Math.floor(rand() * addTemplates.length)]}` });
+        }
+      } else if (file.state === 'del') {
+        lines.push({ type: 'meta', text: `diff --git a/${fullPath} b/${fullPath}` });
+        lines.push({ type: 'meta', text: `deleted file mode 100644` });
+        lines.push({ type: 'meta', text: `--- a/${fullPath}` });
+        lines.push({ type: 'meta', text: `+++ /dev/null` });
+        lines.push({ type: 'hunk', text: `@@ -1,${rmCount} +0,0 @@` });
+        for (let i = 0; i < rmCount; i++) {
+          lines.push({ type: 'del', text: `-${rmTemplates[Math.floor(rand() * rmTemplates.length)]}` });
+        }
+      } else {
+        // Modified file
+        const ctxCount = Math.max(3, Math.floor((addCount + rmCount) * 0.4));
+        const totalOld = rmCount + ctxCount;
+        const totalNew = addCount + ctxCount;
+        lines.push({ type: 'meta', text: `diff --git a/${fullPath} b/${fullPath}` });
+        lines.push({ type: 'meta', text: `index a1b2c3d..e4f5g6h 100644` });
+        lines.push({ type: 'meta', text: `--- a/${fullPath}` });
+        lines.push({ type: 'meta', text: `+++ b/${fullPath}` });
+        lines.push({ type: 'hunk', text: `@@ -1,${totalOld} +1,${totalNew} @@` });
+
+        // Interleave: some context, then removed, then added, then context
+        const topCtx = Math.ceil(ctxCount / 2);
+        const botCtx = ctxCount - topCtx;
+        for (let i = 0; i < topCtx; i++) {
+          lines.push({ type: 'ctx', text: ` ${ctxTemplates[Math.floor(rand() * ctxTemplates.length)]}` });
+        }
+        for (let i = 0; i < rmCount; i++) {
+          lines.push({ type: 'del', text: `-${rmTemplates[Math.floor(rand() * rmTemplates.length)]}` });
+        }
+        for (let i = 0; i < addCount; i++) {
+          lines.push({ type: 'add', text: `+${addTemplates[Math.floor(rand() * addTemplates.length)]}` });
+        }
+        for (let i = 0; i < botCtx; i++) {
+          lines.push({ type: 'ctx', text: ` ${ctxTemplates[Math.floor(rand() * ctxTemplates.length)]}` });
+        }
+      }
+      return lines;
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    let zoomAgentId = null;
+
+    function zoomTreeHtml(agent, activeFileIdx) {
+      const visibleFiles = visibleFilesForAgent(agent);
+      const collapsed = collapsedFolders[agent.id];
+      if (!visibleFiles.length) return '<div class="meta">No changed files.</div>';
+
+      return visibleFiles.filter(f => !isHiddenByCollapse(agent.id, agent.files, f._idx)).map(f => {
+        const isFolderItem = isFolder(f);
+        const isCollapsed = collapsed.has(f._idx);
+        const stateClass = f.state === 'clean' ? '' : f.state;
+        const folderClass = isFolderItem ? 'folder' : '';
+        const chevron = isFolderItem
+          ? `<span class="folder-chevron ${isCollapsed ? 'collapsed' : ''}">▼</span>`
+          : '';
+        let onclick = '';
+        let clickableClass = '';
+        if (isFolderItem) {
+          onclick = `onclick="toggleFolder('${agent.id}', ${f._idx}); renderZoomTree('${agent.id}')"`;
+        } else {
+          onclick = `onclick="openFileZoom('${agent.id}', ${f._idx})"`;
+          clickableClass = 'clickable';
+        }
+        const activeClass = f._idx === activeFileIdx ? 'background:#1e3153;' : '';
+
+        return `<div class="tree-line ${stateClass} ${folderClass} ${clickableClass} indent-${Math.min(f.level,3)}" style="${activeClass}" ${onclick}>
+          <span class="tree-name">${chevron}<span class="file-icon">${fileIcon(f)}</span>${f.name}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderZoomTree(agentId) {
+      const agent = agents.find(a => a.id === agentId);
+      if (!agent) return;
+      const zt = document.getElementById('zoom-tree');
+      if (zt) zt.innerHTML = zoomTreeHtml(agent, zoomActiveFileIdx);
+    }
+
+    let zoomActiveFileIdx = null;
+
+    function generateFileContent(file, fullPath) {
+      const lines = [];
+      const baseName = file.name.replace(/\.[^.]+$/, '');
+      const ext = file.name.includes('.') ? file.name.split('.').pop() : '';
+
+      let seed = 0;
+      for (let i = 0; i < file.name.length; i++) seed = ((seed << 5) - seed + file.name.charCodeAt(i)) | 0;
+      const rand = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed & 0x7fffffff) / 2147483647; };
+
+      const templates = {
+        ts: [
+          `import { Logger } from '../utils/logger';`,
+          `import { Config } from '../config';`,
+          ``,
+          `const logger = new Logger('${baseName}');`,
+          ``,
+          `export interface ${baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[-.](.)/g, (_, c) => c.toUpperCase())}Options {`,
+          `  timeout?: number;`,
+          `  retries?: number;`,
+          `}`,
+          ``,
+          `export function init(options: ${baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[-.](.)/g, (_, c) => c.toUpperCase())}Options = {}) {`,
+          `  const { timeout = 5000, retries = 3 } = options;`,
+          `  logger.info('initializing ${baseName}', { timeout, retries });`,
+          `  return { status: 'ready' };`,
+          `}`,
+        ],
+        js: [
+          `const { Logger } = require('../utils/logger');`,
+          `const config = require('../config');`,
+          ``,
+          `const logger = new Logger('${baseName}');`,
+          ``,
+          `module.exports = {`,
+          `  async process(input) {`,
+          `    logger.info('processing', { id: input.id });`,
+          `    return { ok: true };`,
+          `  }`,
+          `};`,
+        ],
+        json: [
+          `{`,
+          `  "name": "${baseName}",`,
+          `  "version": "1.0.0",`,
+          `  "description": "Configuration for ${baseName}",`,
+          `  "entries": [`,
+          `    { "key": "primary", "value": "active" },`,
+          `    { "key": "fallback", "value": "standby" }`,
+          `  ]`,
+          `}`,
+        ],
+        md: [
+          `# ${baseName.charAt(0).toUpperCase() + baseName.slice(1).replace(/[-](.)/g, (_, c) => ' ' + c.toUpperCase())}`,
+          ``,
+          `## Overview`,
+          ``,
+          `This document describes the ${baseName} module.`,
+          ``,
+          `## Usage`,
+          ``,
+          `- Import the module`,
+          `- Call \`init()\` with options`,
+          `- Handle the response`,
+          ``,
+          `## Notes`,
+          ``,
+          `See related docs for more detail.`,
+        ],
+        yaml: [
+          `# ${baseName} configuration`,
+          `version: "1.0"`,
+          `metadata:`,
+          `  name: ${baseName}`,
+          `  environment: production`,
+          ``,
+          `settings:`,
+          `  timeout: 30`,
+          `  retries: 3`,
+          `  verbose: false`,
+        ],
+        xml: [
+          `<?xml version="1.0" encoding="UTF-8"?>`,
+          `<report name="${baseName}">`,
+          `  <metadata>`,
+          `    <generated>${new Date().toISOString().split('T')[0]}</generated>`,
+          `    <format>junit</format>`,
+          `  </metadata>`,
+          `  <results>`,
+          `    <entry status="pass" name="test-1" />`,
+          `    <entry status="pass" name="test-2" />`,
+          `  </results>`,
+          `</report>`,
+        ],
+        sh: [
+          `#!/usr/bin/env bash`,
+          `set -euo pipefail`,
+          ``,
+          `# ${baseName}`,
+          `echo "Running ${baseName}..."`,
+          ``,
+          `if [ -z "\${TARGET:-}" ]; then`,
+          `  echo "Error: TARGET not set" >&2`,
+          `  exit 1`,
+          `fi`,
+          ``,
+          `echo "Done."`,
+        ],
+        txt: [
+          `${baseName} log`,
+          `================`,
+          ``,
+          `[info] Process started`,
+          `[info] Loading configuration`,
+          `[info] Ready`,
+          `[info] Waiting for input`,
+        ],
+      };
+
+      const fallback = [
+        `// ${baseName}`,
+        `// Auto-generated file`,
+        ``,
+        `// Contents of ${fullPath}`,
+        `// No modifications`,
+      ];
+
+      const tpl = templates[ext] || templates[ext === 'yml' ? 'yaml' : ''] || fallback;
+      tpl.forEach(l => lines.push({ type: 'file', text: l }));
+      return lines;
+    }
+
+    function openFileZoom(agentId, fileIdx) {
+      const agent = agents.find(a => a.id === agentId);
+      if (!agent) return;
+      const file = agent.files[fileIdx];
+      if (!file || isFolder(file)) return;
+
+      zoomAgentId = agentId;
+      zoomActiveFileIdx = fileIdx;
+
+      const fullPath = getFullPath(agent.files, fileIdx);
+      let contentHtml;
+      let headerMeta;
+
+      if (file.state === 'clean') {
+        const fileLines = generateFileContent(file, fullPath);
+        contentHtml = fileLines.map((l, i) =>
+          `<div class="diff-line ${l.type}"><span style="color:#4a5e80;user-select:none">${String(i + 1).padStart(3)}</span>  ${escHtml(l.text)}</div>`
+        ).join('');
+        headerMeta = `<span style="color:var(--muted);font-size:12px">clean</span>`;
+      } else {
+        const diffLines = generateDiff(file, fullPath);
+        contentHtml = diffLines.map(l =>
+          `<div class="diff-line ${l.type}">${escHtml(l.text)}</div>`
+        ).join('');
+        const stateLabel = file.state === 'add' ? 'added' : file.state === 'del' ? 'deleted' : 'modified';
+        const statColor = file.state === 'add' ? 'var(--add)' : file.state === 'del' ? 'var(--del)' : 'var(--mod)';
+        headerMeta = `<span style="color:${statColor};font-size:12px;font-weight:600">${stateLabel}</span>
+          <span class="diff-stat"><span class="diff-add">+${file.add}</span><span class="diff-rm">-${file.rm}</span></span>`;
+      }
+
+      const treeHtml = zoomTreeHtml(agent, fileIdx);
+      const termLogs = agent.logs.map(l => `<span class="log-line">${escHtml(l)}</span>`).join('\n');
+
+      const overlay = document.getElementById('zoom-overlay');
+      overlay.innerHTML = `
+        <div class="zoom-header">
+          <span class="zoom-file">${escHtml(fullPath)}</span>
+          ${headerMeta}
+          <span class="zoom-agent">${agentId}</span>
+          <button class="zoom-close" onclick="closeFileZoom()">✕ Close <span style="color:#6b7ea8;font-size:11px">(Esc)</span></button>
+        </div>
+        <div class="zoom-body">
+          <div class="zoom-diff">${contentHtml}</div>
+          <div class="zoom-tree-side">
+            <div class="tree-head">
+              <span>File tree</span>
+              <div class="tree-toggle">
+                <button class="pill-toggle ${fileTreeMode[agentId] === 'changed' ? 'changed' : ''}" onclick="toggleTreeMode('${agentId}'); renderZoomTree('${agentId}')" title="Toggle all files / git changed">
+                  <span class="thumb"></span>
+                  <span class="track-label">all</span>
+                  <span class="track-label">changed</span>
+                </button>
+                ${diffStatHtml(agent)}
+              </div>
+            </div>
+            <div class="tree" id="zoom-tree">${treeHtml}</div>
+          </div>
+        </div>
+        <div class="zoom-term">
+          <div class="zoom-term-head">${agentId} (${agent.session}:${agent.pane})</div>
+          <div class="term" id="zoom-term-output">${termLogs}</div>
+          <div class="pane-input">
+            <input id="zoom-input" placeholder="send command to ${agentId}" onkeydown="if(event.key==='Enter')zoomSend()" />
+            <button onclick="zoomSend()">Send</button>
+          </div>
+        </div>
+      `;
+
+      overlay.style.display = 'flex';
+      document.addEventListener('keydown', zoomEscHandler);
+
+      // Scroll terminal to bottom
+      const zt = document.getElementById('zoom-term-output');
+      if (zt) zt.scrollTop = zt.scrollHeight;
+    }
+
+    function zoomEscHandler(e) {
+      if (e.key === 'Escape') closeFileZoom();
+    }
+
+    function zoomSend() {
+      const el = document.getElementById('zoom-input');
+      if (!el || !zoomAgentId) return;
+      const cmd = (el.value || '').trim();
+      if (!cmd) return;
+      append(zoomAgentId, `$ ${cmd}`);
+      append(zoomAgentId, `<ok> command queued`);
+      el.value = '';
+    }
+
+    function closeFileZoom() {
+      const overlay = document.getElementById('zoom-overlay');
+      overlay.style.display = 'none';
+      overlay.innerHTML = '';
+      zoomAgentId = null;
+      zoomActiveFileIdx = null;
+      document.removeEventListener('keydown', zoomEscHandler);
     }
 
     // fake live activity

@@ -179,19 +179,45 @@
       align-items:center;
     }
 
-    .tree-toggle button {
-      font-size:11px;
-      padding:4px 7px;
-      border-radius:7px;
-      border:1px solid #355488;
-      background:#162844;
-      color:#d9e8ff;
-      cursor:pointer;
+    .pill-toggle {
+      position: relative;
+      width: 128px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid #3a5a8d;
+      background: #13223b;
+      cursor: pointer;
+      padding: 0;
+      color: #cfe1ff;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
     }
 
-    .tree-toggle button.active {
-      background:#26406b;
-      border-color:#4f79b8;
+    .pill-toggle .track-label {
+      position: relative;
+      z-index: 2;
+      width: 50%;
+      text-align: center;
+      user-select: none;
+    }
+
+    .pill-toggle .thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: calc(50% - 4px);
+      height: 20px;
+      border-radius: 999px;
+      background: #2f4f7e;
+      transition: transform .2s ease;
+      z-index: 1;
+    }
+
+    .pill-toggle.changed .thumb {
+      transform: translateX(100%);
     }
 
     .tree {
@@ -401,8 +427,11 @@
                 <div class="tree-head">
                   <span>File tree</span>
                   <div class="tree-toggle">
-                    <button class="${fileTreeMode[a.id] === 'all' ? 'active' : ''}" onclick="setTreeMode('${a.id}','all')">all</button>
-                    <button class="${fileTreeMode[a.id] === 'changed' ? 'active' : ''}" onclick="setTreeMode('${a.id}','changed')">git changed</button>
+                    <button class="pill-toggle ${fileTreeMode[a.id] === 'changed' ? 'changed' : ''}" onclick="toggleTreeMode('${a.id}')" title="Toggle all files / git changed">
+                      <span class="thumb"></span>
+                      <span class="track-label">all</span>
+                      <span class="track-label">changed</span>
+                    </button>
                     <span class="chip">changed: ${a.files.filter(f => f.state !== 'clean').length}</span>
                   </div>
                 </div>
@@ -477,6 +506,11 @@
 
     function setTreeMode(agentId, mode) {
       fileTreeMode[agentId] = mode;
+      render();
+    }
+
+    function toggleTreeMode(agentId) {
+      fileTreeMode[agentId] = fileTreeMode[agentId] === 'all' ? 'changed' : 'all';
       render();
     }
 

@@ -2,10 +2,15 @@
 
 A lightweight, static mockup for managing multiple agents at once.
 
-## Goals
-- High-level visibility across many agents
-- Event stream for quick situational awareness
-- Clear control affordances (pause/resume/retry)
+## What's in v0.2
+- Fleet status overview (agent/state/task/cpu)
+- Live event stream panel
+- **Task delegation visualization**
+  - Create task
+  - Choose priority
+  - Auto-route or direct assign to agent
+  - Queue visualization updates in real-time
+- **Per-agent checklist cards** for readiness/progress tracking
 
 ## Run locally
 ```bash

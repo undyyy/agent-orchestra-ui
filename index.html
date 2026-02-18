@@ -68,7 +68,14 @@
 
     .main-grid {
       display:grid;
-      grid-template-columns: 1.4fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
+      gap:12px;
+      margin-bottom: 12px;
+    }
+
+    .sub-grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
       gap:12px;
     }
 
@@ -91,7 +98,7 @@
       border:1px solid var(--border);
       border-radius:10px;
       padding:10px;
-      height:360px;
+      height:300px;
       overflow:auto;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size:12px;
@@ -99,20 +106,81 @@
     }
     .log-line { margin-bottom:8px; color:#c7d7ff; }
     .log-line .time { color:#7ea0d6; }
-    .controls { display:flex; gap:8px; margin-top:10px; }
-    button {
+
+    .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    button, select, input {
       background:#1f3358; color:#dbe8ff; border:1px solid #345286;
-      border-radius:8px; padding:8px 10px; cursor:pointer;
+      border-radius:8px; padding:8px 10px;
     }
+    input::placeholder { color:#b6c9ea; }
+    button { cursor:pointer; }
     button:hover { background:#284270; }
 
     .footer-note { color:var(--muted); font-size:12px; margin-top:10px; }
 
-    @media (max-width: 1100px) {
+    .assign-grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+      margin-top: 8px;
+    }
+
+    .queue-list {
+      margin-top:10px;
+      max-height:220px;
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:var(--panel-2);
+      padding:8px;
+      font-size:13px;
+    }
+
+    .queue-item {
+      padding:8px;
+      border-bottom:1px solid #22365d;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .queue-item:last-child { border-bottom:none; }
+
+    .checklist-wrap {
+      display:grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .agent-checklist {
+      background:var(--panel-2);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+    }
+
+    .agent-checklist h4 {
+      margin:0 0 8px;
+      font-size:14px;
+      color:#cfe0ff;
+    }
+
+    .agent-checklist label {
+      display:block;
+      margin:6px 0;
+      font-size:13px;
+      color:#d8e4ff;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { border-right:none; border-bottom:1px solid var(--border); }
       .kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .main-grid { grid-template-columns: 1fr; }
+      .main-grid, .sub-grid, .assign-grid, .checklist-wrap { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -124,13 +192,13 @@
       <nav class="nav">
         <a class="active" href="#">Overview</a>
         <a href="#">Agents</a>
-        <a href="#">Queues</a>
+        <a href="#">Task Delegation</a>
         <a href="#">Runs</a>
         <a href="#">Errors</a>
         <a href="#">Settings</a>
       </nav>
       <div class="footer-note" style="margin-top:18px;">
-        Mock UI v0.1 • designed for real-time orchestration at a glance.
+        Mock UI v0.2 • includes delegation workflow + per-agent checklists.
       </div>
     </aside>
 
@@ -174,17 +242,40 @@
               <button onclick="clearLog()">Clear</button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div class="card">
-            <h3 style="margin-top:0;">Control Actions (mock)</h3>
-            <div class="controls" style="flex-wrap:wrap;">
-              <button>Pause all</button>
-              <button>Resume all</button>
-              <button>Retry failed</button>
-              <button>Rebalance queue</button>
-            </div>
-            <div class="footer-note">These actions are UI mock buttons for flow testing.</div>
+      <section class="sub-grid">
+        <div class="card">
+          <h3 style="margin:0;">Task Delegation Flow (visualization)</h3>
+          <div class="meta" style="margin-top:6px;">Create task → route to agent → queue state updates</div>
+
+          <div class="assign-grid">
+            <input id="task-title" placeholder="Task title (e.g. Add OAuth retries)" />
+            <select id="task-priority">
+              <option value="normal">Priority: Normal</option>
+              <option value="high">Priority: High</option>
+              <option value="urgent">Priority: Urgent</option>
+            </select>
+            <select id="task-agent">
+              <option value="auto">Auto-route</option>
+              <option value="planner-1">planner-1</option>
+              <option value="coder-2">coder-2</option>
+              <option value="tester-3">tester-3</option>
+              <option value="docs-1">docs-1</option>
+              <option value="ops-1">ops-1</option>
+              <option value="research-1">research-1</option>
+            </select>
+            <button onclick="delegateTask()">Delegate Task</button>
           </div>
+
+          <div class="queue-list" id="queue-list"></div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0;">Per-Agent Checklists</h3>
+          <div class="meta" style="margin-top:6px; margin-bottom:10px;">Each agent’s readiness/status checklist at a glance</div>
+          <div class="checklist-wrap" id="checklist-wrap"></div>
         </div>
       </section>
     </main>
@@ -192,16 +283,24 @@
 
   <script>
     const agents = [
-      { name:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now' },
-      { name:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now' },
-      { name:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago' },
-      { name:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago' },
-      { name:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now' },
-      { name:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now' }
+      { name:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now', checklist:['Intake parsed','Dependencies mapped','Output schema set'] },
+      { name:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now', checklist:['Tests identified','Branch clean','Patch queued'] },
+      { name:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago', checklist:['Fixtures loaded','Smoke tests pass','Flaky retry configured'] },
+      { name:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago', checklist:['Template selected','Style guide loaded','Publish target set'] },
+      { name:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now', checklist:['Health checks mapped','Rollback plan ready','Alert thresholds set'] },
+      { name:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now', checklist:['Sources selected','Confidence score','Notes formatted'] }
+    ];
+
+    const queue = [
+      { title:'Summarize CI failures', priority:'high', owner:'tester-3', state:'assigned' },
+      { title:'Draft changelog', priority:'normal', owner:'docs-1', state:'queued' },
+      { title:'Investigate memory spike', priority:'urgent', owner:'ops-1', state:'running' }
     ];
 
     const body = document.getElementById('agents-body');
     const log = document.getElementById('log');
+    const queueList = document.getElementById('queue-list');
+    const checklistWrap = document.getElementById('checklist-wrap');
 
     function statusChip(status) {
       if (status === 'running') return `<span class="chip"><span class="dot ok"></span>running</span>`;
@@ -222,6 +321,31 @@
       `).join('');
     }
 
+    function renderQueue() {
+      queueList.innerHTML = queue.map((q, i) => `
+        <div class="queue-item">
+          <div>
+            <div><strong>${q.title}</strong></div>
+            <div class="meta">owner: ${q.owner} • ${q.state}</div>
+          </div>
+          <div class="chip">${q.priority}</div>
+        </div>
+      `).join('');
+      document.getElementById('kpi-queue').textContent = queue.length;
+    }
+
+    function renderChecklists() {
+      checklistWrap.innerHTML = agents.map((a, i) => `
+        <div class="agent-checklist">
+          <h4>${a.name}</h4>
+          ${a.checklist.map((item, j) => {
+            const checked = (i + j) % 2 === 0 ? 'checked' : '';
+            return `<label><input type="checkbox" ${checked}/> ${item}</label>`;
+          }).join('')}
+        </div>
+      `).join('');
+    }
+
     function addLog(message) {
       const t = new Date().toLocaleTimeString();
       const div = document.createElement('div');
@@ -231,13 +355,40 @@
       while (log.children.length > 80) log.removeChild(log.lastChild);
     }
 
+    function autoRouteAgent() {
+      const preferred = agents.filter(a => a.status !== 'error').sort((a, b) => a.cpu - b.cpu);
+      return preferred[0]?.name || 'planner-1';
+    }
+
+    function delegateTask() {
+      const title = document.getElementById('task-title').value.trim();
+      const priority = document.getElementById('task-priority').value;
+      const selected = document.getElementById('task-agent').value;
+      if (!title) {
+        addLog('⚠️ delegation blocked: missing task title');
+        return;
+      }
+      const owner = selected === 'auto' ? autoRouteAgent() : selected;
+      queue.unshift({ title, priority, owner, state: 'queued' });
+      addLog(`🛰️ delegated "${title}" → ${owner} (${priority})`);
+
+      const target = agents.find(a => a.name === owner);
+      if (target && target.status !== 'error') {
+        target.status = 'running';
+        target.task = title;
+      }
+
+      document.getElementById('task-title').value = '';
+      renderQueue();
+      renderTable();
+    }
+
     function randomTick() {
       agents.forEach(a => {
         a.cpu = Math.max(3, Math.min(95, a.cpu + Math.floor((Math.random() - 0.5) * 12)));
       });
       const active = agents.filter(a => a.status === 'running').length;
       document.getElementById('kpi-active').textContent = active;
-      document.getElementById('kpi-queue').textContent = Math.max(0, 10 + Math.floor(Math.random() * 12));
       renderTable();
     }
 
@@ -259,6 +410,8 @@
     function clearLog() { log.innerHTML = ''; }
 
     renderTable();
+    renderQueue();
+    renderChecklists();
     addLog('Dashboard initialized');
     addLog('Connected to orchestration bus (mock)');
     setInterval(randomTick, 2000);

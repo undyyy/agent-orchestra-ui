@@ -3,321 +3,230 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Orchestra — Multi-Agent Command Center</title>
+  <title>Agent Orchestra — tmux wall</title>
   <style>
     :root {
-      --bg:#0b1220;
-      --panel:#121b2f;
-      --panel-2:#17233d;
-      --text:#e6edff;
-      --muted:#9ab0d6;
-      --ok:#3ddc97;
-      --warn:#ffcc66;
-      --err:#ff6b6b;
-      --chip:#233557;
-      --border:#25365a;
+      --bg:#0a0f1a;
+      --panel:#111827;
+      --border:#24324d;
+      --text:#dbe7ff;
+      --muted:#97acd6;
+      --ok:#34d399;
     }
     * { box-sizing: border-box; }
-    body { margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: linear-gradient(180deg,#0b1220,#0a101c); color:var(--text); }
-    .layout { display:grid; grid-template-columns: 280px 1fr; min-height:100vh; }
-    .sidebar { border-right:1px solid var(--border); background:#0e1728; padding:18px; }
-    .brand { font-weight:700; font-size:20px; margin-bottom:8px; }
-    .subtitle { color:var(--muted); font-size:13px; margin-bottom:18px; }
-    .nav a, .agent-link {
-      display:block; color:var(--text); text-decoration:none; padding:10px 12px;
-      border-radius:10px; margin-bottom:6px; border:1px solid transparent;
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    .nav a.active, .agent-link.active { background:var(--panel); border-color:var(--border); }
-    .nav a:hover, .agent-link:hover { background:#121c30; }
-    .content { padding:18px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px; }
-    .grid { display:grid; gap:12px; }
-    .grid.overview { grid-template-columns: 1.2fr 1fr; }
-    .grid.agent { grid-template-columns: 1fr 1fr; }
-
-    table { width:100%; border-collapse:collapse; font-size:14px; }
-    th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #203150; }
-    th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-    .chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; background:var(--chip); border:1px solid #314a78; }
-    .dot { width:8px; height:8px; border-radius:999px; display:inline-block; }
-    .ok { background:var(--ok); }
-    .warn { background:var(--warn); }
-    .err { background:var(--err); }
-    .meta { color:var(--muted); font-size:12px; }
-
-    .log {
-      background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px;
-      height:300px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size:12px; line-height:1.5;
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+    .top {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:14px;
     }
-    .log-line { margin-bottom:8px; color:#c7d7ff; }
-    .log-line .time { color:#7ea0d6; }
+    .title { font-size:22px; font-weight:700; }
+    .sub { color:var(--muted); font-size:13px; }
 
-    .controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
-    button, select, input {
-      background:#1f3358; color:#dbe8ff; border:1px solid #345286;
-      border-radius:8px; padding:8px 10px;
+    .controls {
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-bottom:14px;
     }
-    input::placeholder { color:#b6c9ea; }
+    select, input, button {
+      background:#16233b;
+      color:var(--text);
+      border:1px solid #335081;
+      border-radius:8px;
+      padding:8px 10px;
+    }
     button { cursor:pointer; }
-    button:hover { background:#284270; }
+    button:hover { background:#1e3153; }
 
-    .queue-list {
-      margin-top:10px; max-height:260px; overflow:auto; border:1px solid var(--border);
-      border-radius:10px; background:var(--panel-2); padding:8px; font-size:13px;
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
     }
-    .queue-item { padding:8px; border-bottom:1px solid #22365d; display:flex; justify-content:space-between; gap:8px; }
-    .queue-item:last-child { border-bottom:none; }
 
-    .checklist { background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px; }
-    .checklist label { display:block; margin:6px 0; font-size:13px; color:#d8e4ff; }
-    .agent-list { margin-top:14px; border-top:1px solid var(--border); padding-top:10px; }
-    .footer-note { color:var(--muted); font-size:12px; margin-top:12px; }
+    .pane {
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:var(--panel);
+    }
+    .pane-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      background:#0f182a;
+      font-size:13px;
+    }
+    .chip {
+      font-size:12px;
+      border:1px solid #2f4f7e;
+      background:#172a47;
+      border-radius:999px;
+      padding:4px 8px;
+      color:#c7ddff;
+    }
+    .term {
+      height:280px;
+      overflow:auto;
+      padding:10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:12px;
+      line-height:1.45;
+      background:#0b1220;
+      color:#cce0ff;
+      white-space:pre-wrap;
+    }
+    .term .ok { color: var(--ok); }
+    .pane-input {
+      border-top:1px solid var(--border);
+      display:flex;
+      gap:8px;
+      padding:10px;
+      background:#0f182a;
+    }
+    .pane-input input { flex:1; }
 
-    @media (max-width: 1200px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { border-right:none; border-bottom:1px solid var(--border); }
-      .grid.overview, .grid.agent { grid-template-columns: 1fr; }
+    .note {
+      margin-top:12px;
+      color:var(--muted);
+      font-size:12px;
+      border:1px dashed #2b4066;
+      border-radius:10px;
+      padding:10px;
+      background:#0e1728;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="brand">🎛️ Agent Orchestra</div>
-      <div class="subtitle">Per-agent operational control center</div>
-      <nav class="nav">
-        <a id="nav-overview" href="#/overview" class="active">Overview</a>
-      </nav>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">🧵 Agent tmux Wall</div>
+        <div class="sub">Each agent is viewed like a direct remote tmux pane.</div>
+      </div>
+      <div class="chip">Simplified v1</div>
+    </div>
 
-      <div class="agent-list" id="agent-links"></div>
-      <div class="footer-note">Mock UI v0.3 • per-agent pages with delegated task flow + checklists.</div>
-    </aside>
+    <div class="controls">
+      <select id="newAgent">
+        <option value="planner-1">planner-1</option>
+        <option value="coder-2">coder-2</option>
+        <option value="tester-3">tester-3</option>
+        <option value="ops-1">ops-1</option>
+      </select>
+      <button onclick="focusAgent()">Focus Agent</button>
+      <button onclick="broadcast('status')">Broadcast: status</button>
+      <button onclick="broadcast('pytest -q')">Broadcast: pytest -q</button>
+      <button onclick="broadcast('git status')">Broadcast: git status</button>
+    </div>
 
-    <main class="content" id="app"></main>
+    <div class="grid" id="grid"></div>
+
+    <div class="note">
+      <strong>Design intent:</strong> keep orchestration dead simple — a wall of panes + optional broadcast input.
+      Backend hookup would map each pane to a real tmux session/pane via websocket.
+    </div>
   </div>
 
   <script>
     const agents = [
-      { id:'planner-1', status:'running', task:'Break down epic #42', cpu:31, seen:'now', start:'09:32', retries:0, checklist:['Intake parsed','Dependencies mapped','Output schema set'] },
-      { id:'coder-2', status:'running', task:'Patch auth middleware', cpu:58, seen:'now', start:'09:41', retries:1, checklist:['Tests identified','Branch clean','Patch queued'] },
-      { id:'tester-3', status:'running', task:'Run integration suite', cpu:74, seen:'2s ago', start:'09:45', retries:2, checklist:['Fixtures loaded','Smoke tests pass','Flaky retry configured'] },
-      { id:'docs-1', status:'idle', task:'Waiting for assignment', cpu:8, seen:'1s ago', start:'--', retries:0, checklist:['Template selected','Style guide loaded','Publish target set'] },
-      { id:'ops-1', status:'warning', task:'Retry deployment check', cpu:43, seen:'now', start:'09:20', retries:3, checklist:['Health checks mapped','Rollback plan ready','Alert thresholds set'] },
-      { id:'research-1', status:'running', task:'Collect benchmark refs', cpu:27, seen:'now', start:'09:39', retries:0, checklist:['Sources selected','Confidence score','Notes formatted'] }
+      { id:'planner-1', session:'orch', pane:'0.0', logs:[
+        '[09:42:11] attached to tmux orch:0.0',
+        '[09:42:15] planning backlog split for epic #42',
+        '[09:42:22] <ok> ready for next command'
+      ]},
+      { id:'coder-2', session:'orch', pane:'0.1', logs:[
+        '[09:42:09] attached to tmux orch:0.1',
+        '[09:42:16] editing src/auth/middleware.ts',
+        '[09:42:29] running targeted tests...'
+      ]},
+      { id:'tester-3', session:'orch', pane:'1.0', logs:[
+        '[09:42:08] attached to tmux orch:1.0',
+        '[09:42:19] pytest -q tests/integration',
+        '[09:42:36] 48 passed, 2 flaky retries'
+      ]},
+      { id:'ops-1', session:'orch', pane:'1.1', logs:[
+        '[09:42:05] attached to tmux orch:1.1',
+        '[09:42:17] checking deploy health',
+        '[09:42:31] memory stable: 27%'
+      ]}
     ];
 
-    const queue = [
-      { title:'Summarize CI failures', priority:'high', owner:'tester-3', state:'assigned' },
-      { title:'Draft changelog', priority:'normal', owner:'docs-1', state:'queued' },
-      { title:'Investigate memory spike', priority:'urgent', owner:'ops-1', state:'running' }
-    ];
+    const grid = document.getElementById('grid');
 
-    const globalLog = [];
-
-    function statusChip(status) {
-      if (status === 'running') return `<span class="chip"><span class="dot ok"></span>running</span>`;
-      if (status === 'warning') return `<span class="chip"><span class="dot warn"></span>warning</span>`;
-      if (status === 'error') return `<span class="chip"><span class="dot err"></span>error</span>`;
-      return `<span class="chip"><span class="dot" style="background:#9ab0d6"></span>idle</span>`;
-    }
-
-    function addLog(message, agentId = null) {
-      const t = new Date().toLocaleTimeString();
-      globalLog.unshift({ t, message, agentId });
-      if (globalLog.length > 200) globalLog.pop();
-    }
-
-    function autoRouteAgent() {
-      const preferred = agents.filter(a => a.status !== 'error').sort((a,b) => a.cpu - b.cpu);
-      return preferred[0]?.id || 'planner-1';
-    }
-
-    function delegateTask({ title, priority, owner }) {
-      const chosen = owner === 'auto' ? autoRouteAgent() : owner;
-      queue.unshift({ title, priority, owner: chosen, state: 'queued' });
-      const target = agents.find(a => a.id === chosen);
-      if (target && target.status !== 'error') {
-        target.status = 'running';
-        target.task = title;
-        target.start = new Date().toLocaleTimeString();
-      }
-      addLog(`🛰️ delegated "${title}" → ${chosen} (${priority})`, chosen);
-    }
-
-    function renderAgentLinks(activeId = null) {
-      const root = document.getElementById('agent-links');
-      root.innerHTML = '<div class="meta" style="margin-bottom:8px;">Agents</div>' + agents.map(a => `
-        <a class="agent-link ${activeId === a.id ? 'active' : ''}" href="#/agent/${a.id}">
-          ${a.id} <span class="meta">• ${a.status}</span>
-        </a>
+    function render() {
+      grid.innerHTML = agents.map(a => `
+        <div class="pane" id="pane-${a.id}">
+          <div class="pane-head">
+            <div><strong>${a.id}</strong> <span style="color:#97acd6">(${a.session}:${a.pane})</span></div>
+            <span class="chip">live</span>
+          </div>
+          <div class="term" id="term-${a.id}">${a.logs.join('\n')}</div>
+          <div class="pane-input">
+            <input id="in-${a.id}" placeholder="send command to ${a.id} (tmux send-keys)" />
+            <button onclick="send('${a.id}')">Send</button>
+          </div>
+        </div>
       `).join('');
-      document.getElementById('nav-overview').classList.toggle('active', !activeId);
-    }
-
-    function renderOverview() {
-      renderAgentLinks();
-      const app = document.getElementById('app');
-      app.innerHTML = `
-        <div class="topbar">
-          <h2 style="margin:0;">Overview</h2>
-          <div class="chip"><span class="dot ok"></span> Auto-refresh: 2s</div>
-        </div>
-
-        <div class="card" style="margin-bottom:12px;">
-          <h3 style="margin:0;">Why per-agent pages?</h3>
-          <div class="meta" style="margin-top:6px;">This view is intentionally minimal. Click any agent in the sidebar for task queue, checklist, controls, and local event stream.</div>
-        </div>
-
-        <div class="grid overview">
-          <div class="card">
-            <h3 style="margin-top:0;">Fleet Snapshot</h3>
-            <table>
-              <thead><tr><th>Agent</th><th>Status</th><th>Current Task</th><th>CPU</th><th>Page</th></tr></thead>
-              <tbody>
-                ${agents.map(a => `
-                  <tr>
-                    <td>${a.id}</td>
-                    <td>${statusChip(a.status)}</td>
-                    <td>${a.task}</td>
-                    <td>${a.cpu}%</td>
-                    <td><a style="color:#9fd0ff" href="#/agent/${a.id}">Open</a></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-
-          <div class="card">
-            <h3 style="margin-top:0;">Global Event Stream</h3>
-            <div class="log" id="global-log"></div>
-          </div>
-        </div>
-      `;
-
-      const logEl = document.getElementById('global-log');
-      logEl.innerHTML = globalLog.map(l => `<div class="log-line"><span class="time">[${l.t}]</span> ${l.message}</div>`).join('');
-    }
-
-    function renderAgentPage(agentId) {
-      const agent = agents.find(a => a.id === agentId);
-      if (!agent) { location.hash = '#/overview'; return; }
-      renderAgentLinks(agentId);
-
-      const agentQueue = queue.filter(q => q.owner === agent.id);
-      const localLog = globalLog.filter(l => !l.agentId || l.agentId === agent.id);
-
-      const app = document.getElementById('app');
-      app.innerHTML = `
-        <div class="topbar">
-          <h2 style="margin:0;">Agent: ${agent.id}</h2>
-          <div>${statusChip(agent.status)}</div>
-        </div>
-
-        <div class="card" style="margin-bottom:12px;">
-          <h3 style="margin:0;">Current State</h3>
-          <div class="grid agent" style="margin-top:10px;">
-            <div><div class="meta">Current task</div><div><strong>${agent.task}</strong></div></div>
-            <div><div class="meta">CPU / last seen</div><div><strong>${agent.cpu}%</strong> • ${agent.seen}</div></div>
-            <div><div class="meta">Started at</div><div>${agent.start}</div></div>
-            <div><div class="meta">Retries</div><div>${agent.retries}</div></div>
-          </div>
-          <div class="controls" style="margin-top:12px;">
-            <button onclick="agentAction('${agent.id}','pause')">Pause</button>
-            <button onclick="agentAction('${agent.id}','resume')">Resume</button>
-            <button onclick="agentAction('${agent.id}','retry')">Retry last step</button>
-            <button onclick="agentAction('${agent.id}','escalate')">Escalate</button>
-          </div>
-        </div>
-
-        <div class="grid agent">
-          <div class="card">
-            <h3 style="margin-top:0;">Delegate New Task</h3>
-            <div class="controls" style="margin-top:0;">
-              <input id="task-title" placeholder="Task for ${agent.id}" style="min-width:260px" />
-              <select id="task-priority">
-                <option value="normal">normal</option>
-                <option value="high">high</option>
-                <option value="urgent">urgent</option>
-              </select>
-              <button onclick="delegateToAgent('${agent.id}')">Assign</button>
-            </div>
-
-            <div class="queue-list" id="queue-list">
-              ${agentQueue.length ? agentQueue.map(q => `
-                <div class="queue-item"><div><strong>${q.title}</strong><div class="meta">${q.state}</div></div><div class="chip">${q.priority}</div></div>
-              `).join('') : '<div class="meta">No queued items for this agent.</div>'}
-            </div>
-          </div>
-
-          <div class="card">
-            <h3 style="margin-top:0;">Checklist</h3>
-            <div class="checklist">
-              ${agent.checklist.map((item, i) => `
-                <label><input type="checkbox" ${i % 2 === 0 ? 'checked' : ''}/> ${item}</label>
-              `).join('')}
-            </div>
-            <div class="meta" style="margin-top:8px;">Per-agent runbook style checklist for operational clarity.</div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px;">
-          <h3 style="margin-top:0;">Local Event Stream</h3>
-          <div class="log" id="local-log">${localLog.map(l => `<div class="log-line"><span class="time">[${l.t}]</span> ${l.message}</div>`).join('')}</div>
-        </div>
-      `;
-    }
-
-    function agentAction(agentId, action) {
-      const agent = agents.find(a => a.id === agentId);
-      if (!agent) return;
-      if (action === 'pause') agent.status = 'idle';
-      if (action === 'resume') agent.status = 'running';
-      if (action === 'retry') agent.retries += 1;
-      addLog(`⚙️ ${agentId}: ${action} action triggered`, agentId);
-      route();
-    }
-
-    function delegateToAgent(agentId) {
-      const title = document.getElementById('task-title')?.value?.trim();
-      const priority = document.getElementById('task-priority')?.value || 'normal';
-      if (!title) {
-        addLog(`⚠️ ${agentId}: delegation blocked (missing title)`, agentId);
-        route();
-        return;
-      }
-      delegateTask({ title, priority, owner: agentId });
-      route();
-    }
-
-    function route() {
-      const hash = location.hash || '#/overview';
-      const agentMatch = hash.match(/^#\/agent\/(.+)$/);
-      if (agentMatch) renderAgentPage(agentMatch[1]);
-      else renderOverview();
-    }
-
-    // background simulation
-    function randomTick() {
       agents.forEach(a => {
-        a.cpu = Math.max(3, Math.min(95, a.cpu + Math.floor((Math.random() - 0.5) * 10)));
+        const term = document.getElementById(`term-${a.id}`);
+        term.scrollTop = term.scrollHeight;
       });
-      if (Math.random() < 0.3) {
-        const a = agents[Math.floor(Math.random()*agents.length)];
-        addLog(`${a.id} heartbeat ok • cpu ${a.cpu}%`, a.id);
-      }
-      route();
     }
 
-    // seed logs
-    addLog('Dashboard initialized');
-    addLog('Connected to orchestration bus (mock)');
-    addLog('Tip: open an agent page from left sidebar for full detail');
+    function append(agentId, line) {
+      const a = agents.find(x => x.id === agentId);
+      if (!a) return;
+      const t = new Date().toLocaleTimeString();
+      a.logs.push(`[${t}] ${line}`);
+      if (a.logs.length > 120) a.logs.shift();
+      render();
+    }
 
-    window.addEventListener('hashchange', route);
-    route();
-    setInterval(randomTick, 2000);
+    function send(agentId) {
+      const el = document.getElementById(`in-${agentId}`);
+      const cmd = (el.value || '').trim();
+      if (!cmd) return;
+      append(agentId, `$ ${cmd}`);
+      append(agentId, `<ok> command queued`);
+      el.value = '';
+    }
+
+    function broadcast(cmd) {
+      agents.forEach(a => append(a.id, `$ ${cmd}`));
+      agents.forEach(a => append(a.id, `<ok> command queued`));
+    }
+
+    function focusAgent() {
+      const id = document.getElementById('newAgent').value;
+      const pane = document.getElementById(`pane-${id}`);
+      if (pane) pane.scrollIntoView({ behavior:'smooth', block:'center' });
+      append(id, '<ok> focused in UI');
+    }
+
+    // tiny fake live stream
+    setInterval(() => {
+      const sample = [
+        'heartbeat ok',
+        'stdout: task progress +1 step',
+        'running quick check',
+        '<ok> awaiting instruction'
+      ];
+      const a = agents[Math.floor(Math.random() * agents.length)];
+      append(a.id, sample[Math.floor(Math.random() * sample.length)]);
+    }, 5000);
+
+    render();
   </script>
 </body>
 </html>

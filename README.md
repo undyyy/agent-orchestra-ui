@@ -1,23 +1,24 @@
 # Agent Orchestra UI (Mock)
 
-A lightweight, static mockup for managing multiple agents at once.
+## v1 Simplification: tmux wall
 
-## What's in v0.2
-- Fleet status overview (agent/state/task/cpu)
-- Live event stream panel
-- **Task delegation visualization**
-  - Create task
-  - Choose priority
-  - Auto-route or direct assign to agent
-  - Queue visualization updates in real-time
-- **Per-agent checklist cards** for readiness/progress tracking
+This version intentionally strips the dashboard down to the core concept:
 
-## Run locally
+- one pane per agent
+- each pane behaves like a remote tmux view
+- per-pane command input (send-keys style)
+- optional broadcast command controls
+
+No aggregate KPIs, no heavy orchestration chrome.
+
+## Run
 ```bash
 python3 -m http.server 8091 --directory .
 ```
 
-Then open `http://localhost:8091`.
+Open `http://localhost:8091`.
 
-## Status
-This is a UI mock only (no backend orchestration yet).
+## Next step (backend hookup)
+- map each pane to a real tmux session/pane
+- stream pane output over websocket
+- wire input to tmux `send-keys`

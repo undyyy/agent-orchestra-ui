@@ -169,6 +169,29 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tree-toggle {
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+
+    .tree-toggle button {
+      font-size:11px;
+      padding:4px 7px;
+      border-radius:7px;
+      border:1px solid #355488;
+      background:#162844;
+      color:#d9e8ff;
+      cursor:pointer;
+    }
+
+    .tree-toggle button.active {
+      background:#26406b;
+      border-color:#4f79b8;
     }
 
     .tree {
@@ -340,9 +363,19 @@
     ];
 
     const grid = document.getElementById('grid');
+    const fileTreeMode = Object.fromEntries(agents.map(a => [a.id, 'all']));
+
+    function visibleFilesForAgent(agent) {
+      if (fileTreeMode[agent.id] === 'changed') {
+        return agent.files.filter(f => f.state !== 'clean');
+      }
+      return agent.files;
+    }
 
     function render() {
-      grid.innerHTML = agents.map(a => `
+      grid.innerHTML = agents.map(a => {
+        const visibleFiles = visibleFilesForAgent(a);
+        return `
         <div class="agent-card" id="card-${a.id}" draggable="true" ondragstart="dragStart(event,'${a.id}')" ondragover="dragOver(event)" ondrop="dropCard(event,'${a.id}')" ondragend="dragEnd(event)">
           <div class="agent-head">
             <div><strong>${a.id}</strong> <span style="color:#97acd6">(${a.session}:${a.pane})</span></div>
@@ -367,21 +400,26 @@
               <div class="tree-wrap">
                 <div class="tree-head">
                   <span>File tree</span>
-                  <span class="chip">changed files: ${a.files.filter(f => f.state !== 'clean').length}</span>
+                  <div class="tree-toggle">
+                    <button class="${fileTreeMode[a.id] === 'all' ? 'active' : ''}" onclick="setTreeMode('${a.id}','all')">all</button>
+                    <button class="${fileTreeMode[a.id] === 'changed' ? 'active' : ''}" onclick="setTreeMode('${a.id}','changed')">git changed</button>
+                    <span class="chip">changed: ${a.files.filter(f => f.state !== 'clean').length}</span>
+                  </div>
                 </div>
                 <div class="tree" id="tree-${a.id}">
-                  ${a.files.map(f => `
+                  ${visibleFiles.length ? visibleFiles.map(f => `
                     <div class="tree-line indent-${Math.min(f.level,2)}">
                       <span class="tree-name">${f.name}</span>
                       <span class="status ${f.state}">${label(f.state)}</span>
                     </div>
-                  `).join('')}
+                  `).join('') : '<div class="meta">No changed files.</div>'}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       agents.forEach(a => {
         const term = document.getElementById(`term-${a.id}`);
@@ -434,6 +472,11 @@
       const states = ['clean','mod','add','del'];
       f.state = states[Math.floor(Math.random() * states.length)];
       append(a.id, `git status update: ${f.name} -> ${label(f.state)}`);
+      render();
+    }
+
+    function setTreeMode(agentId, mode) {
+      fileTreeMode[agentId] = mode;
       render();
     }
 
